@@ -230,6 +230,1839 @@
                     }
                 ]
             }
+        },
+        "/api/v1/categories": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "List categories (Paginated)",
+                "description": "Mendapatkan daftar kategori produk dengan pagination",
+                "operationId": "d9bf255011b42d56bf306832dc3366c8",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Jumlah item per halaman",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar kategori berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Minuman"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Aneka minuman dingin dan hangat"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-01-14T10:00:00.000000Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-01-14T10:00:00.000000Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 50
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Create a new category",
+                "description": "Membuat kategori produk baru",
+                "operationId": "cc8c3a3908a8b33010785820dbe9906f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "Nama kategori (wajib, unik)",
+                                        "type": "string",
+                                        "example": "Makanan Ringan"
+                                    },
+                                    "description": {
+                                        "description": "Deskripsi kategori (opsional)",
+                                        "type": "string",
+                                        "example": "Snack dan camilan untuk cemilan"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Kategori berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Category created successfully"
+                                        },
+                                        "category": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Makanan Ringan"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Snack dan camilan untuk cemilan"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "2024-01-14T10:00:00.000000Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "example": "2024-01-14T10:00:00.000000Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error - nama sudah digunakan atau kosong"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/categories/{id}": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Get category detail",
+                "description": "Mendapatkan detail kategori berdasarkan ID",
+                "operationId": "d809927cce155b8469de92d4c76f9288",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID kategori",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail kategori",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Minuman"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "example": "Aneka minuman dingin dan hangat"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-01-14T10:00:00.000000Z"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-01-14T10:00:00.000000Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Update category",
+                "description": "Mengupdate data kategori",
+                "operationId": "a85a6c8ff85ebcaf43aaecc48fc4f15b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID kategori",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "description": "Nama kategori baru",
+                                        "type": "string",
+                                        "example": "Minuman Segar"
+                                    },
+                                    "description": {
+                                        "description": "Deskripsi baru",
+                                        "type": "string",
+                                        "example": "Aneka minuman segar dan menyehatkan"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Kategori berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Category updated successfully"
+                                        },
+                                        "category": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Minuman Segar"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Aneka minuman segar dan menyehatkan"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Delete category",
+                "description": "Menghapus kategori berdasarkan ID",
+                "operationId": "ae5cb8e79e90c032d135b59468e14efe",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID kategori",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Kategori berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Category deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "List products (Paginated)",
+                "description": "Mendapatkan daftar produk dengan pagination, bisa filter berdasarkan kategori atau pencarian",
+                "operationId": "7ca3593d05653d957ae7be1ac648ca44",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Jumlah item per halaman",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "description": "Filter berdasarkan ID kategori",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Cari berdasarkan nama produk atau barcode",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Teh Botol"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar produk berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "category_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Teh Botol Sosro"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Minuman teh dalam kemasan botol 450ml"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "example": 5000
+                                                    },
+                                                    "stock": {
+                                                        "type": "integer",
+                                                        "example": 100
+                                                    },
+                                                    "barcode": {
+                                                        "type": "string",
+                                                        "example": "8992761100018"
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "products/teh-botol.jpg"
+                                                    },
+                                                    "category": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Minuman"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 100
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Create a new product",
+                "description": "Membuat produk baru dengan upload gambar (multipart/form-data)",
+                "operationId": "cfdb2a3921bee30f9cad135e1c5f1452",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "category_id",
+                                    "name",
+                                    "price"
+                                ],
+                                "properties": {
+                                    "category_id": {
+                                        "description": "ID kategori produk (wajib)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "name": {
+                                        "description": "Nama produk (wajib)",
+                                        "type": "string",
+                                        "example": "Aqua 600ml"
+                                    },
+                                    "description": {
+                                        "description": "Deskripsi produk",
+                                        "type": "string",
+                                        "example": "Air mineral kemasan 600ml"
+                                    },
+                                    "price": {
+                                        "description": "Harga jual (wajib)",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 4000
+                                    },
+                                    "stock": {
+                                        "description": "Stok awal (default: 0)",
+                                        "type": "integer",
+                                        "example": 50
+                                    },
+                                    "barcode": {
+                                        "description": "Barcode produk (unik)",
+                                        "type": "string",
+                                        "example": "8992761100025"
+                                    },
+                                    "image": {
+                                        "description": "File gambar produk (max 2MB, format: jpg/png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Produk berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product created successfully"
+                                        },
+                                        "product": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "category_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Aqua 600ml"
+                                                },
+                                                "price": {
+                                                    "type": "number",
+                                                    "example": 4000
+                                                },
+                                                "stock": {
+                                                    "type": "integer",
+                                                    "example": 50
+                                                },
+                                                "barcode": {
+                                                    "type": "string",
+                                                    "example": "8992761100025"
+                                                },
+                                                "image": {
+                                                    "type": "string",
+                                                    "example": "products/abc123.jpg"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{id}": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get product detail",
+                "description": "Mendapatkan detail produk berdasarkan ID termasuk data kategori",
+                "operationId": "1948ab0c6b14a722ad6d1665cd38e1f1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID produk",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail produk",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "category_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Teh Botol Sosro"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "example": "Minuman teh dalam kemasan botol 450ml"
+                                        },
+                                        "price": {
+                                            "type": "number",
+                                            "example": 5000
+                                        },
+                                        "stock": {
+                                            "type": "integer",
+                                            "example": 100
+                                        },
+                                        "barcode": {
+                                            "type": "string",
+                                            "example": "8992761100018"
+                                        },
+                                        "image": {
+                                            "type": "string",
+                                            "example": "products/teh-botol.jpg"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-01-14T10:00:00.000000Z"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-01-14T10:00:00.000000Z"
+                                        },
+                                        "category": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Minuman"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Aneka minuman"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Update product",
+                "description": "Update data produk. Gunakan POST dengan _method=PUT untuk upload gambar (multipart/form-data)",
+                "operationId": "8706db4923bb03d51f1442423359f3ef",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID produk",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "_method": {
+                                        "description": "Gunakan PUT untuk method spoofing",
+                                        "type": "string",
+                                        "example": "PUT"
+                                    },
+                                    "category_id": {
+                                        "description": "ID kategori baru",
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "name": {
+                                        "description": "Nama produk baru",
+                                        "type": "string",
+                                        "example": "Teh Botol Sosro 500ml"
+                                    },
+                                    "description": {
+                                        "description": "Deskripsi baru",
+                                        "type": "string",
+                                        "example": "Teh botol kemasan besar"
+                                    },
+                                    "price": {
+                                        "description": "Harga baru",
+                                        "type": "number",
+                                        "example": 6000
+                                    },
+                                    "stock": {
+                                        "description": "Stok baru",
+                                        "type": "integer",
+                                        "example": 150
+                                    },
+                                    "barcode": {
+                                        "description": "Barcode baru",
+                                        "type": "string",
+                                        "example": "8992761100099"
+                                    },
+                                    "image": {
+                                        "description": "Gambar baru (opsional)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Produk berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product updated successfully"
+                                        },
+                                        "product": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Teh Botol Sosro 500ml"
+                                                },
+                                                "price": {
+                                                    "type": "number",
+                                                    "example": 6000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Delete product",
+                "description": "Menghapus produk dan gambar terkait",
+                "operationId": "c935132359292f5732d896b035f3f322",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID produk",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Produk berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/reports/dashboard": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get Today's Dashboard Summary",
+                "description": "Mendapatkan ringkasan dashboard untuk hari ini: total penjualan, jumlah transaksi, dan produk terjual",
+                "operationId": "5c1892d68627b04ef159c7c519ac6ed2",
+                "responses": {
+                    "200": {
+                        "description": "Ringkasan dashboard hari ini",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "today_sales": {
+                                            "description": "Total penjualan hari ini (dalam Rupiah)",
+                                            "type": "number",
+                                            "example": 1500000
+                                        },
+                                        "today_transactions": {
+                                            "description": "Jumlah transaksi hari ini",
+                                            "type": "integer",
+                                            "example": 45
+                                        },
+                                        "total_products_sold": {
+                                            "description": "Total produk terjual hari ini",
+                                            "type": "integer",
+                                            "example": 120
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/reports/sales": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get Sales Report (Daily/Monthly)",
+                "description": "Mendapatkan laporan penjualan harian atau bulanan. Untuk daily: gunakan start_date dan end_date. Untuk monthly: gunakan month (format YYYY-MM).",
+                "operationId": "29443b1305b0c597cfe2d58cdb95ccd0",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Tipe laporan: daily (harian) atau monthly (bulanan)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "daily",
+                                "monthly"
+                            ],
+                            "example": "daily"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Tanggal mulai (wajib jika type=daily, format: YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-01-01"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Tanggal akhir (wajib jika type=daily, format: YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-01-31"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Bulan laporan (wajib jika type=monthly, format: YYYY-MM)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2024-01"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Laporan penjualan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "date": {
+                                                "description": "Tanggal",
+                                                "type": "string",
+                                                "example": "2024-01-14"
+                                            },
+                                            "total_sales": {
+                                                "description": "Total penjualan",
+                                                "type": "number",
+                                                "example": 1500000
+                                            },
+                                            "total_transactions": {
+                                                "description": "Jumlah transaksi",
+                                                "type": "integer",
+                                                "example": 45
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "date": "2024-01-01",
+                                        "total_sales": 1200000,
+                                        "total_transactions": 35
+                                    },
+                                    {
+                                        "date": "2024-01-02",
+                                        "total_sales": 1500000,
+                                        "total_transactions": 42
+                                    },
+                                    {
+                                        "date": "2024-01-03",
+                                        "total_sales": 980000,
+                                        "total_transactions": 28
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error - parameter tidak lengkap"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/transactions": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "List transactions (Paginated)",
+                "description": "Mendapatkan daftar transaksi dengan pagination, bisa filter berdasarkan tanggal",
+                "operationId": "9115b43a55e6c92c81e6c62926e4034f",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Jumlah item per halaman",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Filter dari tanggal (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-01-01"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Filter sampai tanggal (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-01-31"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar transaksi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "transaction_code": {
+                                                        "type": "string",
+                                                        "example": "TRX-1705234567-123"
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "total_amount": {
+                                                        "type": "number",
+                                                        "example": 25000
+                                                    },
+                                                    "discount_amount": {
+                                                        "type": "number",
+                                                        "example": 5000
+                                                    },
+                                                    "final_amount": {
+                                                        "type": "number",
+                                                        "example": 20000
+                                                    },
+                                                    "payment_method": {
+                                                        "type": "string",
+                                                        "example": "cash"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "completed"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "example": "2024-01-14T10:00:00.000000Z"
+                                                    },
+                                                    "user": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Budi Santoso"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 50
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Create new transaction (Checkout)",
+                "description": "Membuat transaksi baru (checkout). Stok produk akan otomatis dikurangi.",
+                "operationId": "5968345d7524698be1b46f545cf2a41d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "items",
+                                    "payment_method"
+                                ],
+                                "properties": {
+                                    "items": {
+                                        "description": "Daftar produk yang dibeli (wajib)",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "product_id",
+                                                "quantity"
+                                            ],
+                                            "properties": {
+                                                "product_id": {
+                                                    "description": "ID produk",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "quantity": {
+                                                    "description": "Jumlah yang dibeli",
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "example": [
+                                            {
+                                                "product_id": 1,
+                                                "quantity": 2
+                                            },
+                                            {
+                                                "product_id": 3,
+                                                "quantity": 1
+                                            }
+                                        ]
+                                    },
+                                    "discount_amount": {
+                                        "description": "Diskon dalam rupiah (opsional, default: 0)",
+                                        "type": "number",
+                                        "example": 5000
+                                    },
+                                    "payment_method": {
+                                        "description": "Metode pembayaran (wajib)",
+                                        "type": "string",
+                                        "enum": [
+                                            "cash",
+                                            "qris",
+                                            "transfer"
+                                        ],
+                                        "example": "cash"
+                                    },
+                                    "notes": {
+                                        "description": "Catatan transaksi (opsional)",
+                                        "type": "string",
+                                        "example": "Pelanggan minta kantong plastik"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Transaksi berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaction created successfully"
+                                        },
+                                        "transaction": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "transaction_code": {
+                                                    "type": "string",
+                                                    "example": "TRX-1705234567-123"
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "total_amount": {
+                                                    "type": "number",
+                                                    "example": 25000
+                                                },
+                                                "discount_amount": {
+                                                    "type": "number",
+                                                    "example": 5000
+                                                },
+                                                "final_amount": {
+                                                    "type": "number",
+                                                    "example": 20000
+                                                },
+                                                "payment_method": {
+                                                    "type": "string",
+                                                    "example": "cash"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "completed"
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "Pelanggan minta kantong plastik"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "example": "2024-01-14T10:00:00.000000Z"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "product_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "product_name": {
+                                                                "type": "string",
+                                                                "example": "Teh Botol Sosro"
+                                                            },
+                                                            "quantity": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "unit_price": {
+                                                                "type": "number",
+                                                                "example": 5000
+                                                            },
+                                                            "subtotal": {
+                                                                "type": "number",
+                                                                "example": 10000
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Stok tidak mencukupi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Stock verification failed for Teh Botol Sosro. Requested: 10, Available: 5"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/transactions/{id}": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Get transaction detail",
+                "description": "Mendapatkan detail transaksi beserta daftar item yang dibeli",
+                "operationId": "688bc3b066f6fe867ee32162fa08e71b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID transaksi",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail transaksi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "transaction_code": {
+                                            "type": "string",
+                                            "example": "TRX-1705234567-123"
+                                        },
+                                        "user_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "total_amount": {
+                                            "type": "number",
+                                            "example": 25000
+                                        },
+                                        "discount_amount": {
+                                            "type": "number",
+                                            "example": 5000
+                                        },
+                                        "final_amount": {
+                                            "type": "number",
+                                            "example": 20000
+                                        },
+                                        "payment_method": {
+                                            "type": "string",
+                                            "example": "cash"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "completed"
+                                        },
+                                        "notes": {
+                                            "type": "string",
+                                            "example": "Pelanggan minta kantong plastik"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "example": "2024-01-14T10:00:00.000000Z"
+                                        },
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "product_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "product_name": {
+                                                        "type": "string",
+                                                        "example": "Teh Botol Sosro"
+                                                    },
+                                                    "quantity": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "unit_price": {
+                                                        "type": "number",
+                                                        "example": 5000
+                                                    },
+                                                    "subtotal": {
+                                                        "type": "number",
+                                                        "example": 10000
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Budi Santoso"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "budi@example.com"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Transaction not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "List all users",
+                "description": "Mendapatkan daftar semua user/kasir yang terdaftar",
+                "operationId": "3ab81e3f9b24b4f36ab08d72349ac632",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Jumlah item per halaman",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar user berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Budi Santoso"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "budi@example.com"
+                                                    },
+                                                    "username": {
+                                                        "type": "string",
+                                                        "example": "budi123"
+                                                    },
+                                                    "role": {
+                                                        "type": "string",
+                                                        "example": "kasir"
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-01-14T10:00:00.000000Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 25
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/{id}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user detail",
+                "description": "Mendapatkan detail user berdasarkan ID",
+                "operationId": "daaf7a6169ee9348c3fddb07778598ff",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Budi Santoso"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "example": "budi@example.com"
+                                        },
+                                        "username": {
+                                            "type": "string",
+                                            "example": "budi123"
+                                        },
+                                        "role": {
+                                            "type": "string",
+                                            "example": "kasir"
+                                        },
+                                        "is_active": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-01-14T10:00:00.000000Z"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-01-14T10:00:00.000000Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update user",
+                "description": "Mengupdate data user (nama, password, status aktif). User hanya bisa update profile sendiri.",
+                "operationId": "59e98fba99e974815e27979dd58e2175",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "description": "Nama baru (opsional)",
+                                        "type": "string",
+                                        "example": "Budi Santoso Update"
+                                    },
+                                    "password": {
+                                        "description": "Password baru minimal 8 karakter (opsional)",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    },
+                                    "is_active": {
+                                        "description": "Status aktif user (opsional)",
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User updated successfully"
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Budi Santoso Update"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "budi@example.com"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -244,6 +2077,26 @@
         {
             "name": "Auth",
             "description": "Auth"
+        },
+        {
+            "name": "Categories",
+            "description": "Categories"
+        },
+        {
+            "name": "Products",
+            "description": "Products"
+        },
+        {
+            "name": "Reports",
+            "description": "Reports"
+        },
+        {
+            "name": "Transactions",
+            "description": "Transactions"
+        },
+        {
+            "name": "Users",
+            "description": "Users"
         }
     ]
 }
