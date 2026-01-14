@@ -1,0 +1,44 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, xml, ctype, json, curl, mysql
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --optimize-autoloader --no-interaction
+
+      - name: Deploy to Rumahweb Dev via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH_DEV }}
+            git pull origin dev
+            composer install --optimize-autoloader --no-interaction
+            php artisan migrate --force
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan l5-swagger:generate
+
+      - name: Notify success
+        if: success()
+        run: echo "✅ Deployment to development successful!"
