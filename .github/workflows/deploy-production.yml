@@ -23,22 +23,33 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
-      - name: Deploy to Rumahweb via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Prepare deployment files
+        run: |
+          # Remove files yang tidak perlu di-deploy
+          rm -rf .git
+          rm -rf .github
+          rm -rf tests
+          rm -rf node_modules
+          rm -f .env
+          rm -f .env.example
+          rm -f .gitignore
+          rm -f .gitattributes
+          rm -f phpunit.xml
+          rm -f README.md
+
+      - name: Deploy to Production via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            cd ${{ secrets.DEPLOY_PATH }}
-            git pull origin main
-            composer install --no-dev --optimize-autoloader --no-interaction
-            php artisan migrate --force
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan optimize
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER_PROD }}
+          password: ${{ secrets.FTP_PASSWORD_PROD }}
+          server-dir: ${{ secrets.FTP_DIR_PROD }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .env
+            .env.example
 
       - name: Notify success
         if: success()
@@ -46,4 +57,4 @@ jobs:
 
       - name: Notify failure
         if: failure()
-        run: echo "❌ Deployment failed!"
+        run: echo "❌ Deployment to production failed!"
