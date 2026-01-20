@@ -6,8 +6,12 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes as OA;
+use Carbon\Carbon;
 
 class AuthController extends Controller
 {
@@ -109,7 +113,7 @@ class AuthController extends Controller
 
         // Attempt login with email OR username
         $fieldType = filter_var($request->email, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        
+
         if (!Auth::attempt([$fieldType => $request->email, 'password' => $request->password])) {
             throw ValidationException::withMessages([
                 'email' => ['Invalid credentials'],
@@ -119,7 +123,7 @@ class AuthController extends Controller
         $user = User::where($fieldType, $request->email)->firstOrFail();
 
         if (!$user->is_active) {
-             throw ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'email' => ['User account is inactive.'],
             ]);
         }
@@ -181,5 +185,174 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return response()->json($request->user());
+    }
+    #[OA\Post(
+        path: '/api/v1/auth/forgot-password',
+        summary: 'Send password reset OTP',
+        tags: ['Auth'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'user@example.com')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OTP sent successfully',
+                content: new OA\JsonContent(
+                    properties: [new OA\Property(property: 'message', type: 'string', example: 'OTP code has been sent to your email')]
+                )
+            ),
+            new OA\Response(response: 422, description: 'Validation Error')
+        ]
+    )]
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages(['email' => ['We can\'t find a user with that email address.']]);
+        }
+
+        // Generate 6-digit OTP
+        $otp = rand(100000, 999999);
+
+        // Store hashed OTP in DB
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            [
+                'token' => Hash::make($otp),
+                'created_at' => now()
+            ]
+        );
+
+        // Send Notification
+        $user->notify(new \App\Notifications\ResetPasswordNotification($otp));
+
+        return response()->json(['message' => 'OTP code has been sent to your email']);
+    }
+
+    #[OA\Post(
+        path: '/api/v1/auth/reset-password',
+        summary: 'Reset user password using OTP',
+        tags: ['Auth'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'otp', 'password', 'password_confirmation'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'user@example.com'),
+                    new OA\Property(property: 'otp', type: 'string', example: '123456'),
+                    new OA\Property(property: 'password', type: 'string', format: 'password', example: 'newpassword123'),
+                    new OA\Property(property: 'password_confirmation', type: 'string', format: 'password', example: 'newpassword123')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Password reset successfully',
+                content: new OA\JsonContent(
+                    properties: [new OA\Property(property: 'message', type: 'string', example: 'Password has been reset successfully')]
+                )
+            ),
+            new OA\Response(response: 422, description: 'Validation Error')
+        ]
+    )]
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        // Check if token exists
+        $record = DB::table('password_reset_tokens')->where('email', $request->email)->first();
+
+        if (!$record || !Hash::check($request->otp, $record->token)) {
+            throw ValidationException::withMessages(['otp' => ['Invalid OTP.']]);
+        }
+
+        // Check expiration (15 minutes)
+        if (Carbon::parse($record->created_at)->addMinutes(15)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            throw ValidationException::withMessages(['otp' => ['OTP has expired.']]);
+        }
+
+        // Update password
+        $user = User::where('email', $request->email)->first();
+
+        if ($user) {
+            $user->forceFill([
+                'password' => Hash::make($request->password)
+            ])->setRememberToken(Str::random(60));
+
+            $user->save();
+
+            event(new \Illuminate\Auth\Events\PasswordReset($user));
+        }
+
+        // Delete token
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        return response()->json(['message' => 'Password has been reset successfully']);
+    }
+
+
+
+    #[OA\Post(
+        path: '/api/v1/auth/change-password',
+        summary: 'Change password for logged in user',
+        tags: ['Auth'],
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['current_password', 'new_password', 'new_password_confirmation'],
+                properties: [
+                    new OA\Property(property: 'current_password', type: 'string', format: 'password', example: 'oldpassword123'),
+                    new OA\Property(property: 'new_password', type: 'string', format: 'password', example: 'newpassword123'),
+                    new OA\Property(property: 'new_password_confirmation', type: 'string', format: 'password', example: 'newpassword123')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Password changed successfully',
+                content: new OA\JsonContent(
+                    properties: [new OA\Property(property: 'message', type: 'string', example: 'Password changed successfully')]
+                )
+            ),
+            new OA\Response(response: 422, description: 'Validation Error')
+        ]
+    )]
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['The provided password does not match your current password.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return response()->json(['message' => 'Password changed successfully']);
     }
 }
