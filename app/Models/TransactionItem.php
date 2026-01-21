@@ -18,6 +18,12 @@ class TransactionItem extends Model
         'subtotal'
     ];
 
+    protected $casts = [
+        'quantity' => 'integer',
+        'unit_price' => 'integer',
+        'subtotal' => 'integer',
+    ];
+
     public function transaction()
     {
         return $this->belongsTo(Transaction::class);

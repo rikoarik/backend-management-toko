@@ -33,11 +33,13 @@ class ProductController extends Controller
                                 new OA\Property(property: 'category_id', type: 'integer', example: 1),
                                 new OA\Property(property: 'name', type: 'string', example: 'Teh Botol Sosro'),
                                 new OA\Property(property: 'description', type: 'string', example: 'Minuman teh dalam kemasan botol 450ml'),
-                                new OA\Property(property: 'price', type: 'number', example: 5000),
+                                new OA\Property(property: 'price', type: 'integer', example: 5000),
                                 new OA\Property(property: 'stock', type: 'integer', example: 100),
                                 new OA\Property(property: 'barcode', type: 'string', example: '8992761100018'),
                                 new OA\Property(property: 'image', type: 'string', example: 'products/teh-botol.jpg'),
-                                new OA\Property(property: 'category', type: 'object',
+                                new OA\Property(
+                                    property: 'category',
+                                    type: 'object',
                                     properties: [
                                         new OA\Property(property: 'id', type: 'integer', example: 1),
                                         new OA\Property(property: 'name', type: 'string', example: 'Minuman'),
@@ -65,9 +67,9 @@ class ProductController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('barcode', $search);
+                    ->orWhere('barcode', $search);
             });
         }
 
@@ -91,7 +93,7 @@ class ProductController extends Controller
                         new OA\Property(property: 'category_id', type: 'integer', example: 1, description: 'ID kategori produk (wajib)'),
                         new OA\Property(property: 'name', type: 'string', example: 'Aqua 600ml', description: 'Nama produk (wajib)'),
                         new OA\Property(property: 'description', type: 'string', example: 'Air mineral kemasan 600ml', description: 'Deskripsi produk'),
-                        new OA\Property(property: 'price', type: 'number', format: 'float', example: 4000, description: 'Harga jual (wajib)'),
+                        new OA\Property(property: 'price', type: 'integer', example: 4000, description: 'Harga jual (wajib)'),
                         new OA\Property(property: 'stock', type: 'integer', example: 50, description: 'Stok awal (default: 0)'),
                         new OA\Property(property: 'barcode', type: 'string', example: '8992761100025', description: 'Barcode produk (unik)'),
                         new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'File gambar produk (max 2MB, format: jpg/png)'),
@@ -105,12 +107,14 @@ class ProductController extends Controller
                 description: 'Produk berhasil dibuat',
                 content: new OA\JsonContent(properties: [
                     new OA\Property(property: 'message', type: 'string', example: 'Product created successfully'),
-                    new OA\Property(property: 'product', type: 'object',
+                    new OA\Property(
+                        property: 'product',
+                        type: 'object',
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 10),
                             new OA\Property(property: 'category_id', type: 'integer', example: 1),
                             new OA\Property(property: 'name', type: 'string', example: 'Aqua 600ml'),
-                            new OA\Property(property: 'price', type: 'number', example: 4000),
+                            new OA\Property(property: 'price', type: 'integer', example: 4000),
                             new OA\Property(property: 'stock', type: 'integer', example: 50),
                             new OA\Property(property: 'barcode', type: 'string', example: '8992761100025'),
                             new OA\Property(property: 'image', type: 'string', example: 'products/abc123.jpg'),
@@ -126,7 +130,7 @@ class ProductController extends Controller
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|integer|min:0',
             'stock' => 'integer|min:0',
             'barcode' => 'nullable|string|unique:products',
             'image' => 'nullable|image|max:2048', // Max 2MB
@@ -167,13 +171,15 @@ class ProductController extends Controller
                         new OA\Property(property: 'category_id', type: 'integer', example: 1),
                         new OA\Property(property: 'name', type: 'string', example: 'Teh Botol Sosro'),
                         new OA\Property(property: 'description', type: 'string', example: 'Minuman teh dalam kemasan botol 450ml'),
-                        new OA\Property(property: 'price', type: 'number', example: 5000),
+                        new OA\Property(property: 'price', type: 'integer', example: 5000),
                         new OA\Property(property: 'stock', type: 'integer', example: 100),
                         new OA\Property(property: 'barcode', type: 'string', example: '8992761100018'),
                         new OA\Property(property: 'image', type: 'string', example: 'products/teh-botol.jpg'),
                         new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2024-01-14T10:00:00.000000Z'),
                         new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', example: '2024-01-14T10:00:00.000000Z'),
-                        new OA\Property(property: 'category', type: 'object',
+                        new OA\Property(
+                            property: 'category',
+                            type: 'object',
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'name', type: 'string', example: 'Minuman'),
@@ -209,7 +215,7 @@ class ProductController extends Controller
                         new OA\Property(property: 'category_id', type: 'integer', example: 2, description: 'ID kategori baru'),
                         new OA\Property(property: 'name', type: 'string', example: 'Teh Botol Sosro 500ml', description: 'Nama produk baru'),
                         new OA\Property(property: 'description', type: 'string', example: 'Teh botol kemasan besar', description: 'Deskripsi baru'),
-                        new OA\Property(property: 'price', type: 'number', example: 6000, description: 'Harga baru'),
+                        new OA\Property(property: 'price', type: 'integer', example: 6000, description: 'Harga baru'),
                         new OA\Property(property: 'stock', type: 'integer', example: 150, description: 'Stok baru'),
                         new OA\Property(property: 'barcode', type: 'string', example: '8992761100099', description: 'Barcode baru'),
                         new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'Gambar baru (opsional)'),
@@ -223,11 +229,13 @@ class ProductController extends Controller
                 description: 'Produk berhasil diupdate',
                 content: new OA\JsonContent(properties: [
                     new OA\Property(property: 'message', type: 'string', example: 'Product updated successfully'),
-                    new OA\Property(property: 'product', type: 'object',
+                    new OA\Property(
+                        property: 'product',
+                        type: 'object',
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 1),
                             new OA\Property(property: 'name', type: 'string', example: 'Teh Botol Sosro 500ml'),
-                            new OA\Property(property: 'price', type: 'number', example: 6000),
+                            new OA\Property(property: 'price', type: 'integer', example: 6000),
                         ]
                     ),
                 ])
@@ -243,7 +251,7 @@ class ProductController extends Controller
         $request->validate([
             'category_id' => 'sometimes|exists:categories,id',
             'name' => 'sometimes|string|max:255',
-            'price' => 'sometimes|numeric|min:0',
+            'price' => 'sometimes|integer|min:0',
             'stock' => 'sometimes|integer|min:0',
             'barcode' => 'nullable|string|unique:products,barcode,' . $id,
             'image' => 'nullable|image|max:2048',
@@ -256,7 +264,7 @@ class ProductController extends Controller
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
-            
+
             $file = $request->file('image');
             $path = $file->store('products', 'public');
             $data['image'] = $path;

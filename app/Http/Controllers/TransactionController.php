@@ -38,7 +38,7 @@ class TransactionController extends Controller
                             ['product_id' => 3, 'quantity' => 1]
                         ]
                     ),
-                    new OA\Property(property: 'discount_amount', type: 'number', example: 5000, description: 'Diskon dalam rupiah (opsional, default: 0)'),
+                    new OA\Property(property: 'discount_amount', type: 'integer', example: 5000, description: 'Diskon dalam rupiah (opsional, default: 0)'),
                     new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris', 'transfer'], example: 'cash', description: 'Metode pembayaran (wajib)'),
                     new OA\Property(property: 'notes', type: 'string', example: 'Pelanggan minta kantong plastik', description: 'Catatan transaksi (opsional)'),
                 ]
@@ -50,14 +50,16 @@ class TransactionController extends Controller
                 description: 'Transaksi berhasil dibuat',
                 content: new OA\JsonContent(properties: [
                     new OA\Property(property: 'message', type: 'string', example: 'Transaction created successfully'),
-                    new OA\Property(property: 'transaction', type: 'object',
+                    new OA\Property(
+                        property: 'transaction',
+                        type: 'object',
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 1),
                             new OA\Property(property: 'transaction_code', type: 'string', example: 'TRX-1705234567-123'),
                             new OA\Property(property: 'user_id', type: 'integer', example: 1),
-                            new OA\Property(property: 'total_amount', type: 'number', example: 25000),
-                            new OA\Property(property: 'discount_amount', type: 'number', example: 5000),
-                            new OA\Property(property: 'final_amount', type: 'number', example: 20000),
+                            new OA\Property(property: 'total_amount', type: 'integer', example: 25000),
+                            new OA\Property(property: 'discount_amount', type: 'integer', example: 5000),
+                            new OA\Property(property: 'final_amount', type: 'integer', example: 20000),
                             new OA\Property(property: 'payment_method', type: 'string', example: 'cash'),
                             new OA\Property(property: 'status', type: 'string', example: 'completed'),
                             new OA\Property(property: 'notes', type: 'string', example: 'Pelanggan minta kantong plastik'),
@@ -68,8 +70,8 @@ class TransactionController extends Controller
                                     new OA\Property(property: 'product_id', type: 'integer', example: 1),
                                     new OA\Property(property: 'product_name', type: 'string', example: 'Teh Botol Sosro'),
                                     new OA\Property(property: 'quantity', type: 'integer', example: 2),
-                                    new OA\Property(property: 'unit_price', type: 'number', example: 5000),
-                                    new OA\Property(property: 'subtotal', type: 'number', example: 10000),
+                                    new OA\Property(property: 'unit_price', type: 'integer', example: 5000),
+                                    new OA\Property(property: 'subtotal', type: 'integer', example: 10000),
                                 ]
                             )),
                         ]
@@ -92,7 +94,7 @@ class TransactionController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'discount_amount' => 'numeric|min:0',
+            'discount_amount' => 'integer|min:0',
             'payment_method' => 'required|string',
             'notes' => 'nullable|string',
         ]);
@@ -128,7 +130,7 @@ class TransactionController extends Controller
 
             // 2. Create Transaction Header
             $finalAmount = $totalAmount - ($request->discount_amount ?? 0);
-            
+
             $transaction = Transaction::create([
                 'transaction_code' => 'TRX-' . time() . '-' . mt_rand(100, 999),
                 'user_id' => auth()->id(),
@@ -177,13 +179,15 @@ class TransactionController extends Controller
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'transaction_code', type: 'string', example: 'TRX-1705234567-123'),
                                 new OA\Property(property: 'user_id', type: 'integer', example: 1),
-                                new OA\Property(property: 'total_amount', type: 'number', example: 25000),
-                                new OA\Property(property: 'discount_amount', type: 'number', example: 5000),
-                                new OA\Property(property: 'final_amount', type: 'number', example: 20000),
+                                new OA\Property(property: 'total_amount', type: 'integer', example: 25000),
+                                new OA\Property(property: 'discount_amount', type: 'integer', example: 5000),
+                                new OA\Property(property: 'final_amount', type: 'integer', example: 20000),
                                 new OA\Property(property: 'payment_method', type: 'string', example: 'cash'),
                                 new OA\Property(property: 'status', type: 'string', example: 'completed'),
                                 new OA\Property(property: 'created_at', type: 'string', example: '2024-01-14T10:00:00.000000Z'),
-                                new OA\Property(property: 'user', type: 'object',
+                                new OA\Property(
+                                    property: 'user',
+                                    type: 'object',
                                     properties: [
                                         new OA\Property(property: 'id', type: 'integer', example: 1),
                                         new OA\Property(property: 'name', type: 'string', example: 'Budi Santoso'),
@@ -206,7 +210,7 @@ class TransactionController extends Controller
 
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('created_at', [
-                $request->start_date . ' 00:00:00', 
+                $request->start_date . ' 00:00:00',
                 $request->end_date . ' 23:59:59'
             ]);
         }
@@ -233,9 +237,9 @@ class TransactionController extends Controller
                         new OA\Property(property: 'id', type: 'integer', example: 1),
                         new OA\Property(property: 'transaction_code', type: 'string', example: 'TRX-1705234567-123'),
                         new OA\Property(property: 'user_id', type: 'integer', example: 1),
-                        new OA\Property(property: 'total_amount', type: 'number', example: 25000),
-                        new OA\Property(property: 'discount_amount', type: 'number', example: 5000),
-                        new OA\Property(property: 'final_amount', type: 'number', example: 20000),
+                        new OA\Property(property: 'total_amount', type: 'integer', example: 25000),
+                        new OA\Property(property: 'discount_amount', type: 'integer', example: 5000),
+                        new OA\Property(property: 'final_amount', type: 'integer', example: 20000),
                         new OA\Property(property: 'payment_method', type: 'string', example: 'cash'),
                         new OA\Property(property: 'status', type: 'string', example: 'completed'),
                         new OA\Property(property: 'notes', type: 'string', example: 'Pelanggan minta kantong plastik'),
@@ -246,11 +250,13 @@ class TransactionController extends Controller
                                 new OA\Property(property: 'product_id', type: 'integer', example: 1),
                                 new OA\Property(property: 'product_name', type: 'string', example: 'Teh Botol Sosro'),
                                 new OA\Property(property: 'quantity', type: 'integer', example: 2),
-                                new OA\Property(property: 'unit_price', type: 'number', example: 5000),
-                                new OA\Property(property: 'subtotal', type: 'number', example: 10000),
+                                new OA\Property(property: 'unit_price', type: 'integer', example: 5000),
+                                new OA\Property(property: 'subtotal', type: 'integer', example: 10000),
                             ]
                         )),
-                        new OA\Property(property: 'user', type: 'object',
+                        new OA\Property(
+                            property: 'user',
+                            type: 'object',
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'name', type: 'string', example: 'Budi Santoso'),

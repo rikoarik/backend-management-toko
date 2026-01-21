@@ -20,6 +20,12 @@ class Transaction extends Model
         'notes'
     ];
 
+    protected $casts = [
+        'total_amount' => 'integer',
+        'discount_amount' => 'integer',
+        'final_amount' => 'integer',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
