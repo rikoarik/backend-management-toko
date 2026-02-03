@@ -51,6 +51,12 @@ jobs:
             .env
             .env.example
 
+      - name: Run Migrations & Clear Cache
+        run: |
+          curl -X POST ${{ secrets.APP_URL_DEV }}/deploy/migrate \
+          -H "X-Deploy-Secret: ${{ secrets.DEPLOY_SECRET_DEV }}" \
+          -H "Content-Type: application/json"
+
       - name: Notify success
         if: success()
         run: echo "✅ Deployment to development successful!"
