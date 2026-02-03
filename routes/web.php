@@ -10,8 +10,9 @@ Route::get('/', function () {
 // Deploy endpoint untuk GitHub Actions (protected by secret)
 Route::post('/deploy/migrate', function () {
     $secret = request()->header('X-Deploy-Secret');
+    $expectedSecret = env('DEPLOY_SECRET'); // Use env() directly to bypass config cache
 
-    if (!$secret || $secret !== config('app.deploy_secret')) {
+    if (!$secret || !$expectedSecret || $secret !== $expectedSecret) {
         return response()->json(['error' => 'Unauthorized'], 401);
     }
 
