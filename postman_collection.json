@@ -670,6 +670,18 @@
 									"type": "text"
 								},
 								{
+									"key": "wholesale_price",
+									"value": "3800",
+									"description": "Harga grosir (optional)",
+									"type": "text"
+								},
+								{
+									"key": "retail_price",
+									"value": "4500",
+									"description": "Harga ecer (optional)",
+									"type": "text"
+								},
+								{
 									"key": "stock",
 									"value": "50",
 									"description": "Stok awal (default: 0)",
@@ -694,7 +706,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["products"]
 						},
-						"description": "Membuat produk baru dengan upload gambar (multipart/form-data)\n\n**Request Body (form-data):**\n- `category_id` (integer, required): ID kategori\n- `name` (string, required): Nama produk\n- `description` (string, optional): Deskripsi\n- `price` (number, required): Harga jual\n- `stock` (integer, optional): Stok awal (default: 0)\n- `barcode` (string, optional): Barcode unik\n- `image` (file, optional): Gambar produk (max 2MB)\n\n**Response (201):**\n- `message`: Product created successfully\n- `product`: Data produk yang dibuat"
+						"description": "Membuat produk baru dengan upload gambar (multipart/form-data)\n\n**Request Body (form-data):**\n- `category_id` (integer, required): ID kategori\n- `name` (string, required): Nama produk\n- `description` (string, optional): Deskripsi\n- `price` (number, required): Harga jual\n- `wholesale_price` (number, optional): Harga grosir\n- `retail_price` (number, optional): Harga ecer\n- `stock` (integer, optional): Stok awal (default: 0)\n- `barcode` (string, optional): Barcode unik\n- `image` (file, optional): Gambar produk (max 2MB)\n\n**Response (201):**\n- `message`: Product created successfully\n- `product`: Data produk yang dibuat"
 					},
 					"response": []
 				},
@@ -778,6 +790,18 @@
 									"key": "price",
 									"value": "6000",
 									"description": "Harga baru",
+									"type": "text"
+								},
+								{
+									"key": "wholesale_price",
+									"value": "5500",
+									"description": "Harga grosir baru",
+									"type": "text"
+								},
+								{
+									"key": "retail_price",
+									"value": "6500",
+									"description": "Harga ecer baru",
 									"type": "text"
 								},
 								{
