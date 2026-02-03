@@ -51,27 +51,6 @@ jobs:
             .env
             .env.example
 
-      - name: Run Migration
-        run: |
-          echo "Running migration on production server..."
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            -H "Content-Type: application/json" \
-            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_SECRET }}" \
-            "${{ secrets.PROD_URL }}/deploy/migrate")
-          
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n-1)
-          
-          echo "Response: $BODY"
-          echo "HTTP Code: $HTTP_CODE"
-          
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "❌ Migration failed!"
-            exit 1
-          fi
-          
-          echo "✅ Migration completed successfully!"
-
       - name: Notify success
         if: success()
         run: echo "✅ Deployment to production successful!"
@@ -79,4 +58,5 @@ jobs:
       - name: Notify failure
         if: failure()
         run: echo "❌ Deployment to production failed!"
+
 

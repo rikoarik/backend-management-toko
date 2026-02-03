@@ -797,6 +797,20 @@
 									"description": "Gambar baru (opsional) - gambar lama akan dihapus",
 									"type": "file",
 									"src": []
+								},
+								{
+									"key": "purchase_price",
+									"value": "500000",
+									"description": "Total harga beli jika restock (opsional, untuk otomatis catat expense)",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "supplier",
+									"value": "Supplier ABC",
+									"description": "Nama supplier (opsional)",
+									"type": "text",
+									"disabled": true
 								}
 							]
 						},
@@ -805,7 +819,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["products", "1"]
 						},
-						"description": "Update data produk dengan upload gambar baru. Gunakan POST dengan `_method=PUT` untuk method spoofing (multipart/form-data)\n\n**Path Parameters:**\n- `id` (integer, required): ID produk\n\n**Request Body (form-data, semua opsional):**\n- `_method` (string): Harus diisi \"PUT\"\n- `category_id`, `name`, `description`, `price`, `stock`, `barcode`, `image`\n\n**Response (200):**\n- `message`: Product updated successfully\n- `product`: Data produk yang diupdate"
+						"description": "Update data produk dengan upload gambar baru. Gunakan POST dengan `_method=PUT` untuk method spoofing (multipart/form-data)\n\n**Path Parameters:**\n- `id` (integer, required): ID produk\n\n**Request Body (form-data, semua opsional):**\n- `_method` (string): Harus diisi \"PUT\"\n- `category_id`, `name`, `description`, `price`, `stock`, `barcode`, `image`\n- `purchase_price` (integer, opsional): Jika stok bertambah dan field ini diisi, expense akan otomatis tercatat\n- `supplier` (string, opsional): Nama supplier untuk deskripsi expense\n\n**Response (200):**\n- `message`: Product updated successfully\n- `product`: Data produk yang diupdate\n- `expense` (opsional): Data expense jika restock dengan purchase_price"
 					},
 					"response": []
 				},
