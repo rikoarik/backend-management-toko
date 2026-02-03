@@ -31,6 +31,16 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('products', \App\Http\Controllers\ProductController::class);
         Route::apiResource('transactions', \App\Http\Controllers\TransactionController::class);
 
+        // Expenses
+        Route::get('expenses/categories', [\App\Http\Controllers\ExpenseController::class, 'categories']);
+        Route::apiResource('expenses', \App\Http\Controllers\ExpenseController::class);
+
+        // Dashboard
+        Route::prefix('dashboard')->group(function () {
+            Route::get('chart', [\App\Http\Controllers\DashboardController::class, 'chart']);
+            Route::get('summary', [\App\Http\Controllers\DashboardController::class, 'summary']);
+        });
+
         Route::prefix('reports')->group(function () {
             Route::get('dashboard', [\App\Http\Controllers\ReportController::class, 'dashboard']);
             Route::get('sales', [\App\Http\Controllers\ReportController::class, 'sales']);

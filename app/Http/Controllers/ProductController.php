@@ -20,6 +20,7 @@ class ProductController extends Controller
             new OA\Parameter(name: 'size', in: 'query', description: 'Jumlah item per halaman', required: false, schema: new OA\Schema(type: 'integer', example: 10)),
             new OA\Parameter(name: 'category_id', in: 'query', description: 'Filter berdasarkan ID kategori', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'search', in: 'query', description: 'Cari berdasarkan nama produk atau barcode', required: false, schema: new OA\Schema(type: 'string', example: 'Teh Botol')),
+            new OA\Parameter(name: 'filter', in: 'query', description: 'Filter sorting: NEWEST (Terbaru), OLDEST (Terlama), STOCK_HIGH (Stok Terbanyak), STOCK_LOW (Stok Tersedikit)', required: false, schema: new OA\Schema(type: 'string', enum: ['NEWEST', 'OLDEST', 'STOCK_HIGH', 'STOCK_LOW'], example: 'NEWEST')),
         ],
         responses: [
             new OA\Response(
@@ -71,6 +72,27 @@ class ProductController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('barcode', $search);
             });
+        }
+
+        // Apply sorting filter
+        if ($request->filled('filter')) {
+            switch ($request->filter) {
+                case 'NEWEST':
+                    $query->orderBy('created_at', 'desc');
+                    break;
+                case 'OLDEST':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'STOCK_HIGH':
+                    $query->orderBy('stock', 'desc');
+                    break;
+                case 'STOCK_LOW':
+                    $query->orderBy('stock', 'asc');
+                    break;
+            }
+        } else {
+            // Default sorting by newest
+            $query->orderBy('created_at', 'desc');
         }
 
         $size = $request->input('size', 10);
