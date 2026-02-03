@@ -222,7 +222,7 @@ class ProductController extends Controller
     #[OA\Post(
         path: '/api/v1/products/{id}',
         summary: 'Update product',
-        description: 'Update data produk. Gunakan POST dengan _method=PUT untuk upload gambar (multipart/form-data)',
+        description: 'Update data produk. Gunakan POST dengan _method=PUT untuk upload gambar (multipart/form-data). Jika stok bertambah dan purchase_price disertakan, expense akan otomatis tercatat.',
         security: [['sanctum' => []]],
         tags: ['Products'],
         parameters: [
@@ -241,6 +241,8 @@ class ProductController extends Controller
                         new OA\Property(property: 'stock', type: 'integer', example: 150, description: 'Stok baru'),
                         new OA\Property(property: 'barcode', type: 'string', example: '8992761100099', description: 'Barcode baru'),
                         new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'Gambar baru (opsional)'),
+                        new OA\Property(property: 'purchase_price', type: 'integer', example: 500000, description: 'Total harga beli jika restock (opsional, untuk otomatis catat expense)'),
+                        new OA\Property(property: 'supplier', type: 'string', example: 'Supplier ABC', description: 'Nama supplier (opsional)'),
                     ]
                 )
             )
@@ -251,15 +253,8 @@ class ProductController extends Controller
                 description: 'Produk berhasil diupdate',
                 content: new OA\JsonContent(properties: [
                     new OA\Property(property: 'message', type: 'string', example: 'Product updated successfully'),
-                    new OA\Property(
-                        property: 'product',
-                        type: 'object',
-                        properties: [
-                            new OA\Property(property: 'id', type: 'integer', example: 1),
-                            new OA\Property(property: 'name', type: 'string', example: 'Teh Botol Sosro 500ml'),
-                            new OA\Property(property: 'price', type: 'integer', example: 6000),
-                        ]
-                    ),
+                    new OA\Property(property: 'product', type: 'object'),
+                    new OA\Property(property: 'expense', type: 'object', nullable: true, description: 'Expense yang tercatat jika ada restock'),
                 ])
             ),
             new OA\Response(response: 404, description: 'Product not found'),
@@ -269,6 +264,7 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
+        $oldStock = $product->stock;
 
         $request->validate([
             'category_id' => 'sometimes|exists:categories,id',
@@ -277,9 +273,11 @@ class ProductController extends Controller
             'stock' => 'sometimes|integer|min:0',
             'barcode' => 'nullable|string|unique:products,barcode,' . $id,
             'image' => 'nullable|image|max:2048',
+            'purchase_price' => 'nullable|integer|min:1',
+            'supplier' => 'nullable|string|max:255',
         ]);
 
-        $data = $request->except(['image', '_method']);
+        $data = $request->except(['image', '_method', 'purchase_price', 'supplier']);
 
         if ($request->hasFile('image')) {
             // Delete old image if exists
@@ -294,10 +292,37 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        return response()->json([
+        // Auto create expense if stock increased and purchase_price is provided
+        $expense = null;
+        $newStock = $product->stock;
+        $stockAdded = $newStock - $oldStock;
+
+        if ($stockAdded > 0 && $request->filled('purchase_price')) {
+            $description = "Restock {$product->name} (+{$stockAdded} pcs)";
+            if ($request->supplier) {
+                $description .= " dari {$request->supplier}";
+            }
+
+            $expense = \App\Models\Expense::create([
+                'user_id' => auth()->id(),
+                'category' => \App\Models\Expense::CATEGORY_STOCK,
+                'amount' => $request->purchase_price,
+                'description' => $description,
+                'expense_date' => now()->toDateString(),
+            ]);
+        }
+
+        $response = [
             'message' => 'Product updated successfully',
             'product' => $product
-        ]);
+        ];
+
+        if ($expense) {
+            $response['expense'] = $expense;
+            $response['message'] = 'Product updated and expense recorded successfully';
+        }
+
+        return response()->json($response);
     }
 
     #[OA\Delete(
@@ -332,4 +357,89 @@ class ProductController extends Controller
 
         return response()->json(['message' => 'Product deleted successfully']);
     }
+
+    #[OA\Post(
+        path: '/api/v1/products/{id}/restock',
+        summary: 'Restock product',
+        description: 'Menambah stok produk dan otomatis mencatat pengeluaran (expense) dengan kategori beli_stok',
+        security: [['sanctum' => []]],
+        tags: ['Products'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', description: 'ID produk', required: true, schema: new OA\Schema(type: 'integer', example: 1))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['quantity', 'purchase_price'],
+                properties: [
+                    new OA\Property(property: 'quantity', type: 'integer', description: 'Jumlah stok yang ditambahkan', example: 50),
+                    new OA\Property(property: 'purchase_price', type: 'integer', description: 'Total harga beli (dalam Rupiah)', example: 500000),
+                    new OA\Property(property: 'supplier', type: 'string', description: 'Nama supplier (opsional)', example: 'Supplier ABC'),
+                    new OA\Property(property: 'notes', type: 'string', description: 'Catatan tambahan (opsional)', example: 'Beli stok untuk bulan Februari'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Stok berhasil ditambahkan dan expense tercatat',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Stock added and expense recorded successfully'),
+                        new OA\Property(property: 'product', type: 'object'),
+                        new OA\Property(property: 'expense', type: 'object'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: 'Product not found'),
+            new OA\Response(response: 422, description: 'Validation error')
+        ]
+    )]
+    public function restock(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'purchase_price' => 'required|integer|min:1',
+            'supplier' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        // Update product stock
+        $oldStock = $product->stock;
+        $product->stock += $request->quantity;
+        $product->save();
+
+        // Build expense description
+        $description = "Restock {$product->name} (+{$request->quantity} pcs)";
+        if ($request->supplier) {
+            $description .= " dari {$request->supplier}";
+        }
+        if ($request->notes) {
+            $description .= ". {$request->notes}";
+        }
+
+        // Create expense automatically
+        $expense = \App\Models\Expense::create([
+            'user_id' => auth()->id(),
+            'category' => \App\Models\Expense::CATEGORY_STOCK,
+            'amount' => $request->purchase_price,
+            'description' => $description,
+            'expense_date' => now()->toDateString(),
+        ]);
+
+        return response()->json([
+            'message' => 'Stock added and expense recorded successfully',
+            'product' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'old_stock' => $oldStock,
+                'added_quantity' => $request->quantity,
+                'new_stock' => $product->stock,
+            ],
+            'expense' => $expense,
+        ]);
+    }
 }
+
