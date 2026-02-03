@@ -53,9 +53,24 @@ jobs:
 
       - name: Run Migrations & Clear Cache
         run: |
-          curl -X POST ${{ secrets.APP_URL_DEV }}/deploy/migrate \
-          -H "X-Deploy-Secret: ${{ secrets.DEPLOY_SECRET_DEV }}" \
-          -H "Content-Type: application/json"
+          echo "Running migration on development server..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_SECRET_DEV }}" \
+            "${{ secrets.APP_URL_DEV }}/deploy/migrate")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "Response: $BODY"
+          echo "HTTP Code: $HTTP_CODE"
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Migration failed!"
+            exit 1
+          fi
+          
+          echo "✅ Migration completed successfully!"
 
       - name: Notify success
         if: success()
