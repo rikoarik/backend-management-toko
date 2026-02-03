@@ -10,7 +10,13 @@ Route::get('/', function () {
 // Deploy endpoint untuk GitHub Actions (protected by secret)
 Route::post('/deploy/migrate', function () {
     $secret = request()->header('X-Deploy-Secret');
-    $expectedSecret = config('app.deploy_secret'); // Use config() to support cached config
+    // Force load .env to bypass config cache issues during deployment
+    // This is necessary because if config is cached (but outdated), env() returns null AND config() returns old values.
+    if (file_exists(base_path('.env'))) {
+        \Dotenv\Dotenv::createImmutable(base_path())->safeLoad();
+    }
+
+    $expectedSecret = $_ENV['DEPLOY_SECRET'] ?? env('DEPLOY_SECRET');
 
     if (!$secret || !$expectedSecret || $secret !== $expectedSecret) {
         return response()->json(['error' => 'Unauthorized'], 401);
