@@ -5,15 +5,20 @@
  * Method: POST with X-Deploy-Secret header
  */
 
-// Load Laravel
-require __DIR__ . '/vendor/autoload.php';
-$app = require_once __DIR__ . '/bootstrap/app.php';
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Load Laravel (paths relative to public/ directory)
+require __DIR__ . '/../vendor/autoload.php';
+$app = require_once __DIR__ . '/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 // Force reload .env to bypass any cached config
-if (file_exists(__DIR__ . '/.env')) {
-    \Dotenv\Dotenv::createImmutable(__DIR__)->safeLoad();
+if (file_exists(__DIR__ . '/../.env')) {
+    \Dotenv\Dotenv::createImmutable(__DIR__ . '/../')->safeLoad();
 }
 
 // Get secret from header
