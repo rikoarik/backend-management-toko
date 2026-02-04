@@ -57,7 +57,7 @@ jobs:
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Content-Type: application/json" \
             -H "X-Deploy-Secret: ${{ secrets.DEPLOY_SECRET }}" \
-            "${{ secrets.DEV_URL }}/deploy/migrate")
+            "${{ secrets.DEV_URL }}/deploy-migrate.php")
           
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n-1)
