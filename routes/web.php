@@ -19,7 +19,15 @@ Route::post('/deploy/migrate', function () {
     $expectedSecret = $_ENV['DEPLOY_SECRET'] ?? env('DEPLOY_SECRET');
 
     if (!$secret || !$expectedSecret || $secret !== $expectedSecret) {
-        return response()->json(['error' => 'Unauthorized'], 401);
+        return response()->json([
+            'error' => 'Unauthorized',
+            'debug' => [
+                'secret_provided' => !empty($secret),
+                'expected_secret_loaded' => !empty($expectedSecret),
+                'secrets_match' => $secret === $expectedSecret,
+                'env_file_exists' => file_exists(base_path('.env')),
+            ]
+        ], 401);
     }
 
     try {
