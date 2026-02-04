@@ -670,6 +670,12 @@
 									"type": "text"
 								},
 								{
+									"key": "cost_price",
+									"value": "3500",
+									"description": "Harga modal (optional)",
+									"type": "text"
+								},
+								{
 									"key": "wholesale_price",
 									"value": "3800",
 									"description": "Harga grosir (optional)",
@@ -706,7 +712,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["products"]
 						},
-						"description": "Membuat produk baru dengan upload gambar (multipart/form-data)\n\n**Request Body (form-data):**\n- `category_id` (integer, required): ID kategori\n- `name` (string, required): Nama produk\n- `description` (string, optional): Deskripsi\n- `price` (number, required): Harga jual\n- `wholesale_price` (number, optional): Harga grosir\n- `retail_price` (number, optional): Harga ecer\n- `stock` (integer, optional): Stok awal (default: 0)\n- `barcode` (string, optional): Barcode unik\n- `image` (file, optional): Gambar produk (max 2MB)\n\n**Response (201):**\n- `message`: Product created successfully\n- `product`: Data produk yang dibuat"
+						"description": "Membuat produk baru dengan upload gambar (multipart/form-data)\n\n**Request Body (form-data):**\n- `category_id` (integer, required): ID kategori\n- `name` (string, required): Nama produk\n- `description` (string, optional): Deskripsi\n- `price` (number, required): Harga jual\n- `cost_price` (number, optional): Harga modal\n- `wholesale_price` (number, optional): Harga grosir\n- `retail_price` (number, optional): Harga ecer\n- `stock` (integer, optional): Stok awal (default: 0)\n- `barcode` (string, optional): Barcode unik\n- `image` (file, optional): Gambar produk (max 2MB)\n\n**Response (201):**\n- `message`: Product created successfully\n- `product`: Data produk yang dibuat"
 					},
 					"response": []
 				},
@@ -793,6 +799,12 @@
 									"type": "text"
 								},
 								{
+									"key": "cost_price",
+									"value": "4500",
+									"description": "Harga modal baru",
+									"type": "text"
+								},
+								{
 									"key": "wholesale_price",
 									"value": "5500",
 									"description": "Harga grosir baru",
@@ -843,7 +855,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["products", "1"]
 						},
-						"description": "Update data produk dengan upload gambar baru. Gunakan POST dengan `_method=PUT` untuk method spoofing (multipart/form-data)\n\n**Path Parameters:**\n- `id` (integer, required): ID produk\n\n**Request Body (form-data, semua opsional):**\n- `_method` (string): Harus diisi \"PUT\"\n- `category_id`, `name`, `description`, `price`, `stock`, `barcode`, `image`\n- `purchase_price` (integer, opsional): Jika stok bertambah dan field ini diisi, expense akan otomatis tercatat\n- `supplier` (string, opsional): Nama supplier untuk deskripsi expense\n\n**Response (200):**\n- `message`: Product updated successfully\n- `product`: Data produk yang diupdate\n- `expense` (opsional): Data expense jika restock dengan purchase_price"
+						"description": "Update data produk dengan upload gambar baru. Gunakan POST dengan `_method=PUT` untuk method spoofing (multipart/form-data)\n\n**Path Parameters:**\n- `id` (integer, required): ID produk\n\n**Request Body (form-data, semua opsional):**\n- `_method` (string): Harus diisi \"PUT\"\n- `category_id`, `name`, `description`, `price`, `cost_price`, `stock`, `barcode`, `image`\n- `purchase_price` (integer, opsional): Jika stok bertambah dan field ini diisi, expense akan otomatis tercatat\n- `supplier` (string, opsional): Nama supplier untuk deskripsi expense\n\n**Response (200):**\n- `message`: Product updated successfully\n- `product`: Data produk yang diupdate\n- `expense` (opsional): Data expense jika restock dengan purchase_price"
 					},
 					"response": []
 				},
@@ -908,14 +920,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"items\": [\n        {\n            \"product_id\": 1,\n            \"quantity\": 2\n        },\n        {\n            \"product_id\": 3,\n            \"quantity\": 1\n        }\n    ],\n    \"discount_amount\": 5000,\n    \"payment_method\": \"cash\",\n    \"notes\": \"Pelanggan minta kantong plastik\"\n}"
+							"raw": "{\n    \"items\": [\n        {\n            \"product_id\": 1,\n            \"quantity\": 2,\n            \"price_type\": \"wholesale\"\n        },\n        {\n            \"product_id\": 3,\n            \"quantity\": 1,\n            \"price_type\": \"retail\"\n        }\n    ],\n    \"discount_amount\": 5000,\n    \"payment_method\": \"cash\",\n    \"notes\": \"Pelanggan minta kantong plastik\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/transactions",
 							"host": ["{{base_url}}"],
 							"path": ["transactions"]
 						},
-						"description": "Membuat transaksi baru (checkout). Stok produk akan otomatis dikurangi.\n\n**Request Body:**\n- `items` (array, required): Daftar produk yang dibeli\n  - `product_id` (integer): ID produk\n  - `quantity` (integer): Jumlah yang dibeli\n- `discount_amount` (number, optional): Diskon dalam rupiah (default: 0)\n- `payment_method` (string, required): cash | qris | transfer\n- `notes` (string, optional): Catatan transaksi\n\n**Response (201):**\n- `message`: Transaction created successfully\n- `transaction`: Data transaksi lengkap dengan items\n\n**Error (400):** Jika stok tidak mencukupi\n**Error (422):** Validation Error"
+						"description": "Membuat transaksi baru (checkout). Stok produk akan otomatis dikurangi.\n\n**Request Body:**\n- `items` (array, required): Daftar produk yang dibeli\n  - `product_id` (integer): ID produk\n  - `quantity` (integer): Jumlah yang dibeli\n  - `price_type` (string, optional): standard | wholesale | retail (Default: standard)\n- `discount_amount` (number, optional): Diskon dalam rupiah (default: 0)\n- `payment_method` (string, required): cash | qris | transfer\n- `notes` (string, optional): Catatan transaksi\n\n**Response (201):**\n- `message`: Transaction created successfully\n- `transaction`: Data transaksi lengkap dengan items\n\n**Error (400):** Jika stok tidak mencukupi\n**Error (422):** Validation Error"
 					},
 					"response": []
 				},
