@@ -11,7 +11,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->integer('cost_price')->nullable()->after('price');
+            if (!Schema::hasColumn('products', 'cost_price')) {
+                $table->integer('cost_price')->nullable()->after('price');
+            }
         });
     }
 

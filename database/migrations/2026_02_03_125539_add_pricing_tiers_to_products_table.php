@@ -11,8 +11,12 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->integer('wholesale_price')->nullable()->after('price');
-            $table->integer('retail_price')->nullable()->after('wholesale_price');
+            if (!Schema::hasColumn('products', 'wholesale_price')) {
+                $table->integer('wholesale_price')->nullable()->after('price');
+            }
+            if (!Schema::hasColumn('products', 'retail_price')) {
+                $table->integer('retail_price')->nullable()->after('wholesale_price');
+            }
         });
     }
 
