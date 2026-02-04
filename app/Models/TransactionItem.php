@@ -15,12 +15,14 @@ class TransactionItem extends Model
         'product_name',
         'quantity',
         'unit_price',
+        'cost_price',
         'subtotal'
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'unit_price' => 'integer',
+        'cost_price' => 'integer',
         'subtotal' => 'integer',
     ];
 

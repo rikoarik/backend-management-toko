@@ -14,6 +14,7 @@ class Product extends Model
         'name',
         'description',
         'price',
+        'cost_price',
         'wholesale_price',
         'retail_price',
         'stock',
@@ -24,6 +25,7 @@ class Product extends Model
 
     protected $casts = [
         'price' => 'integer',
+        'cost_price' => 'integer',
         'wholesale_price' => 'integer',
         'retail_price' => 'integer',
         'is_active' => 'boolean',

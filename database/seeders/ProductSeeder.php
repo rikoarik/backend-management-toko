@@ -168,16 +168,24 @@ class ProductSeeder extends Seeder
         foreach ($categories as $category) {
             if (isset($productTemplates[$category->name])) {
                 $products = $productTemplates[$category->name];
-                
+
                 foreach ($products as $product) {
                     // Generate barcode unik
                     $barcode = 'PRD' . str_pad($category->id, 2, '0', STR_PAD_LEFT) . rand(10000, 99999);
-                    
+
+                    // Calculate pricing tiers
+                    $costPrice = (int) ($product['price'] * 0.7); // 70% of price
+                    $wholesalePrice = (int) ($product['price'] * 0.9); // 90% of price
+                    $retailPrice = (int) ($product['price'] * 1.1); // 110% of price
+
                     Product::create([
                         'category_id' => $category->id,
                         'name' => $product['name'],
                         'description' => "Deskripsi untuk {$product['name']}. Produk berkualitas tinggi dengan harga terjangkau.",
                         'price' => $product['price'],
+                        'cost_price' => $costPrice,
+                        'wholesale_price' => $wholesalePrice,
+                        'retail_price' => $retailPrice,
                         'stock' => $product['stock'],
                         'barcode' => $barcode,
                         'is_active' => true,

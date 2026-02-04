@@ -31,6 +31,7 @@ class TransactionController extends Controller
                             properties: [
                                 new OA\Property(property: 'product_id', type: 'integer', example: 1, description: 'ID produk'),
                                 new OA\Property(property: 'quantity', type: 'integer', example: 2, description: 'Jumlah yang dibeli'),
+                                new OA\Property(property: 'price_type', type: 'string', enum: ['standard', 'wholesale', 'retail'], example: 'standard', description: 'Tipe harga (opsional, default: standard)'),
                             ]
                         ),
                         example: [
@@ -71,6 +72,7 @@ class TransactionController extends Controller
                                     new OA\Property(property: 'product_name', type: 'string', example: 'Teh Botol Sosro'),
                                     new OA\Property(property: 'quantity', type: 'integer', example: 2),
                                     new OA\Property(property: 'unit_price', type: 'integer', example: 5000),
+                                    new OA\Property(property: 'cost_price', type: 'integer', example: 3500),
                                     new OA\Property(property: 'subtotal', type: 'integer', example: 10000),
                                 ]
                             )),
@@ -94,6 +96,7 @@ class TransactionController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price_type' => 'nullable|string|in:standard,wholesale,retail',
             'discount_amount' => 'integer|min:0',
             'payment_method' => 'required|string',
             'notes' => 'nullable|string',
@@ -116,14 +119,23 @@ class TransactionController extends Controller
                 $product->stock -= $item['quantity'];
                 $product->save();
 
-                $subtotal = $product->price * $item['quantity'];
+                // Determine price based on type
+                $priceType = $item['price_type'] ?? 'standard';
+                $unitPrice = match ($priceType) {
+                    'wholesale' => $product->wholesale_price ?? $product->price,
+                    'retail' => $product->retail_price ?? $product->price,
+                    default => $product->price,
+                };
+
+                $subtotal = $unitPrice * $item['quantity'];
                 $totalAmount += $subtotal;
 
                 $transactionItems[] = [
                     'product_id' => $product->id,
                     'product_name' => $product->name,
                     'quantity' => $item['quantity'],
-                    'unit_price' => $product->price,
+                    'unit_price' => $unitPrice,
+                    'cost_price' => $product->cost_price ?? 0,
                     'subtotal' => $subtotal,
                 ];
             }

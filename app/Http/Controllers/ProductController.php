@@ -118,6 +118,7 @@ class ProductController extends Controller
                         new OA\Property(property: 'name', type: 'string', example: 'Aqua 600ml', description: 'Nama produk (wajib)'),
                         new OA\Property(property: 'description', type: 'string', example: 'Air mineral kemasan 600ml', description: 'Deskripsi produk'),
                         new OA\Property(property: 'price', type: 'integer', example: 4000, description: 'Harga jual (wajib)'),
+                        new OA\Property(property: 'cost_price', type: 'integer', example: 3500, description: 'Harga beli/modal per unit'),
                         new OA\Property(property: 'wholesale_price', type: 'integer', example: 3800, description: 'Harga grosir'),
                         new OA\Property(property: 'retail_price', type: 'integer', example: 4500, description: 'Harga ecer'),
                         new OA\Property(property: 'stock', type: 'integer', example: 50, description: 'Stok awal (default: 0)'),
@@ -141,6 +142,7 @@ class ProductController extends Controller
                             new OA\Property(property: 'category_id', type: 'integer', example: 1),
                             new OA\Property(property: 'name', type: 'string', example: 'Aqua 600ml'),
                             new OA\Property(property: 'price', type: 'integer', example: 4000),
+                            new OA\Property(property: 'cost_price', type: 'integer', example: 3500),
                             new OA\Property(property: 'wholesale_price', type: 'integer', example: 3800),
                             new OA\Property(property: 'retail_price', type: 'integer', example: 4500),
                             new OA\Property(property: 'stock', type: 'integer', example: 50),
@@ -159,6 +161,7 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
             'price' => 'required|integer|min:0',
+            'cost_price' => 'nullable|integer|min:0',
             'wholesale_price' => 'nullable|integer|min:0',
             'retail_price' => 'nullable|integer|min:0',
             'stock' => 'integer|min:0',
@@ -253,6 +256,7 @@ class ProductController extends Controller
                         new OA\Property(property: 'stock', type: 'integer', example: 150, description: 'Stok baru'),
                         new OA\Property(property: 'barcode', type: 'string', example: '8992761100099', description: 'Barcode baru'),
                         new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'Gambar baru (opsional)'),
+                        new OA\Property(property: 'cost_price', type: 'integer', example: 5000, description: 'Harga beli/modal per unit baru'),
                         new OA\Property(property: 'purchase_price', type: 'integer', example: 500000, description: 'Total harga beli jika restock (opsional, untuk otomatis catat expense)'),
                         new OA\Property(property: 'supplier', type: 'string', example: 'Supplier ABC', description: 'Nama supplier (opsional)'),
                     ]
@@ -287,6 +291,7 @@ class ProductController extends Controller
             'stock' => 'sometimes|integer|min:0',
             'barcode' => 'nullable|string|unique:products,barcode,' . $id,
             'image' => 'nullable|image|max:2048',
+            'cost_price' => 'nullable|integer|min:0',
             'purchase_price' => 'nullable|integer|min:1',
             'supplier' => 'nullable|string|max:255',
         ]);
@@ -324,6 +329,10 @@ class ProductController extends Controller
                 'description' => $description,
                 'expense_date' => now()->toDateString(),
             ]);
+
+            // Auto update cost_price based on purchase_price / added stock
+            $newCostPrice = (int) ($request->purchase_price / $stockAdded);
+            $product->update(['cost_price' => $newCostPrice]);
         }
 
         $response = [
@@ -442,6 +451,10 @@ class ProductController extends Controller
             'description' => $description,
             'expense_date' => now()->toDateString(),
         ]);
+
+        // Auto update cost_price
+        $newCostPrice = (int) ($request->purchase_price / $request->quantity);
+        $product->update(['cost_price' => $newCostPrice]);
 
         return response()->json([
             'message' => 'Stock added and expense recorded successfully',
