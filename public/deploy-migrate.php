@@ -46,30 +46,35 @@ if (!$secret || !$expectedSecret || $secret !== $expectedSecret) {
 }
 
 try {
+    // Use Artisan facade through the app instance
+    $artisan = $app->make(Illuminate\Contracts\Console\Kernel::class);
+    
     // Run migration
-    $migrateStatus = Artisan::call('migrate', ['--force' => true]);
-    $migrateOutput = Artisan::output();
+    $migrateStatus = $artisan->call('migrate', ['--force' => true]);
+    $migrateOutput = $artisan->output();
 
     // Clear caches
-    Artisan::call('config:clear');
-    Artisan::call('cache:clear');
-    Artisan::call('view:clear');
-    Artisan::call('route:clear');
+    $artisan->call('config:clear');
+    $artisan->call('cache:clear');
+    $artisan->call('view:clear');
+    $artisan->call('route:clear');
 
     // Re-cache
-    Artisan::call('config:cache');
-    Artisan::call('route:cache');
-    Artisan::call('view:cache');
+    $artisan->call('config:cache');
+    $artisan->call('route:cache');
+    $artisan->call('view:cache');
 
     echo json_encode([
         'success' => true,
         'message' => 'Migration and cache refresh completed',
         'migrate_output' => $migrateOutput,
+        'migrate_status' => $migrateStatus,
     ]);
-} catch (Exception $e) {
+} catch (\Exception $e) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString(),
     ]);
 }
