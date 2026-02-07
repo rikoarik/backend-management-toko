@@ -613,12 +613,12 @@
 								{
 									"key": "filter",
 									"value": "NEWEST",
-									"description": "Filter sorting: NEWEST (Terbaru), OLDEST (Terlama), STOCK_HIGH (Stok Terbanyak), STOCK_LOW (Stok Tersedikit)",
+									"description": "Filter sorting: NEWEST (Terbaru), OLDEST (Terlama), STOCK_HIGH (Stok Terbanyak), STOCK_LOW (Stok Tersedikit), NAME_ASC (Nama A-z), NAME_DESC (Nama z-A)",
 									"disabled": true
 								}
 							]
 						},
-						"description": "Mendapatkan daftar produk dengan pagination dan filter\n\n**Query Parameters:**\n- `page` (integer, optional): Nomor halaman\n- `size` (integer, optional): Jumlah per halaman (default: 10)\n- `category_id` (integer, optional): Filter berdasarkan kategori\n- `search` (string, optional): Cari berdasarkan nama produk atau barcode\n- `filter` (string, optional): Filter sorting - NEWEST (Terbaru), OLDEST (Terlama), STOCK_HIGH (Stok Terbanyak), STOCK_LOW (Stok Tersedikit). Default: NEWEST\n\n**Response (200):**\n- `data`: Array of products dengan relasi category\n- Pagination info"
+						"description": "Mendapatkan daftar produk dengan pagination dan filter\n\n**Query Parameters:**\n- `page` (integer, optional): Nomor halaman\n- `size` (integer, optional): Jumlah per halaman (default: 10)\n- `category_id` (integer, optional): Filter berdasarkan kategori\n- `search` (string, optional): Cari berdasarkan nama produk atau barcode\n- `filter` (string, optional): Filter sorting - NEWEST (Terbaru), OLDEST (Terlama), STOCK_HIGH (Stok Terbanyak), STOCK_LOW (Stok Tersedikit), NAME_ASC (Nama A-z), NAME_DESC (Nama z-A). Default: NEWEST\n\n**Response (200):**\n- `data`: Array of products dengan relasi category\n- Pagination info"
 					},
 					"response": []
 				},
