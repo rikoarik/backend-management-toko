@@ -20,7 +20,7 @@ class ProductController extends Controller
             new OA\Parameter(name: 'size', in: 'query', description: 'Jumlah item per halaman', required: false, schema: new OA\Schema(type: 'integer', example: 10)),
             new OA\Parameter(name: 'category_id', in: 'query', description: 'Filter berdasarkan ID kategori', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'search', in: 'query', description: 'Cari berdasarkan nama produk atau barcode', required: false, schema: new OA\Schema(type: 'string', example: 'Teh Botol')),
-            new OA\Parameter(name: 'filter', in: 'query', description: 'Filter sorting: NEWEST (Terbaru), OLDEST (Terlama), STOCK_HIGH (Stok Terbanyak), STOCK_LOW (Stok Tersedikit)', required: false, schema: new OA\Schema(type: 'string', enum: ['NEWEST', 'OLDEST', 'STOCK_HIGH', 'STOCK_LOW'], example: 'NEWEST')),
+            new OA\Parameter(name: 'filter', in: 'query', description: 'Filter sorting: NEWEST (Terbaru), OLDEST (Terlama), STOCK_HIGH (Stok Terbanyak), STOCK_LOW (Stok Tersedikit), NAME_ASC (Nama A-z), NAME_DESC (Nama z-A)', required: false, schema: new OA\Schema(type: 'string', enum: ['NEWEST', 'OLDEST', 'STOCK_HIGH', 'STOCK_LOW', 'NAME_ASC', 'NAME_DESC'], example: 'NEWEST')),
         ],
         responses: [
             new OA\Response(
@@ -90,6 +90,12 @@ class ProductController extends Controller
                     break;
                 case 'STOCK_LOW':
                     $query->orderBy('stock', 'asc');
+                    break;
+                case 'NAME_ASC':
+                    $query->orderBy('name', 'asc');
+                    break;
+                case 'NAME_DESC':
+                    $query->orderBy('name', 'desc');
                     break;
             }
         } else {
