@@ -67,7 +67,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'User registered successfully',
+            'message' => 'Pengguna berhasil didaftarkan',
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user
@@ -131,7 +131,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Login successful',
+            'message' => 'Login berhasil',
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user
@@ -159,7 +159,7 @@ class AuthController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(['message' => 'Logged out successfully']);
+        return response()->json(['message' => 'Berhasil logout']);
     }
 
     #[OA\Get(
@@ -235,7 +235,7 @@ class AuthController extends Controller
         // Send Notification
         $user->notify(new \App\Notifications\ResetPasswordNotification($otp));
 
-        return response()->json(['message' => 'OTP code has been sent to your email']);
+        return response()->json(['message' => 'Kode OTP telah dikirim ke email Anda']);
     }
 
     #[OA\Post(
@@ -302,7 +302,7 @@ class AuthController extends Controller
         // Delete token
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        return response()->json(['message' => 'Password has been reset successfully']);
+        return response()->json(['message' => 'Password berhasil direset']);
     }
 
 
@@ -353,6 +353,6 @@ class AuthController extends Controller
             'password' => Hash::make($request->new_password),
         ]);
 
-        return response()->json(['message' => 'Password changed successfully']);
+        return response()->json(['message' => 'Password berhasil diubah']);
     }
 }

@@ -111,7 +111,9 @@ class UserController extends Controller
                 description: 'User berhasil diupdate',
                 content: new OA\JsonContent(properties: [
                     new OA\Property(property: 'message', type: 'string', example: 'User updated successfully'),
-                    new OA\Property(property: 'user', type: 'object',
+                    new OA\Property(
+                        property: 'user',
+                        type: 'object',
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 1),
                             new OA\Property(property: 'name', type: 'string', example: 'Budi Santoso Update'),
@@ -135,8 +137,10 @@ class UserController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        if ($request->has('name')) $user->name = $request->name;
-        if ($request->has('is_active')) $user->is_active = $request->is_active;
+        if ($request->has('name'))
+            $user->name = $request->name;
+        if ($request->has('is_active'))
+            $user->is_active = $request->is_active;
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
@@ -144,7 +148,7 @@ class UserController extends Controller
         $user->save();
 
         return response()->json([
-            'message' => 'User updated successfully',
+            'message' => 'Pengguna berhasil diperbarui',
             'user' => $user
         ]);
     }

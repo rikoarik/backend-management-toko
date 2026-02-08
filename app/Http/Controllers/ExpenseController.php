@@ -132,7 +132,7 @@ class ExpenseController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Expense created successfully',
+            'message' => 'Pengeluaran berhasil dicatat',
             'expense' => $expense
         ], 201);
     }
@@ -231,7 +231,7 @@ class ExpenseController extends Controller
         $expense->update($request->only(['category', 'amount', 'description', 'expense_date']));
 
         return response()->json([
-            'message' => 'Expense updated successfully',
+            'message' => 'Pengeluaran berhasil diperbarui',
             'expense' => $expense
         ]);
     }
@@ -261,7 +261,7 @@ class ExpenseController extends Controller
         $expense = Expense::findOrFail($id);
         $expense->delete();
 
-        return response()->json(['message' => 'Expense deleted successfully']);
+        return response()->json(['message' => 'Pengeluaran berhasil dihapus']);
     }
 
     #[OA\Get(

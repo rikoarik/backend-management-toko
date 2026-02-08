@@ -186,7 +186,7 @@ class ProductController extends Controller
         $product = Product::create($data);
 
         return response()->json([
-            'message' => 'Product created successfully',
+            'message' => 'Produk berhasil dibuat',
             'product' => $product
         ], 201);
     }
@@ -342,13 +342,13 @@ class ProductController extends Controller
         }
 
         $response = [
-            'message' => 'Product updated successfully',
+            'message' => 'Produk berhasil diperbarui',
             'product' => $product
         ];
 
         if ($expense) {
             $response['expense'] = $expense;
-            $response['message'] = 'Product updated and expense recorded successfully';
+            $response['message'] = 'Produk berhasil diperbarui dan pengeluaran tercatat';
         }
 
         return response()->json($response);
@@ -384,7 +384,7 @@ class ProductController extends Controller
 
         $product->delete();
 
-        return response()->json(['message' => 'Product deleted successfully']);
+        return response()->json(['message' => 'Produk berhasil dihapus']);
     }
 
     #[OA\Post(
@@ -463,7 +463,7 @@ class ProductController extends Controller
         $product->update(['cost_price' => $newCostPrice]);
 
         return response()->json([
-            'message' => 'Stock added and expense recorded successfully',
+            'message' => 'Stok berhasil ditambahkan dan pengeluaran tercatat',
             'product' => [
                 'id' => $product->id,
                 'name' => $product->name,

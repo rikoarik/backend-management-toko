@@ -112,7 +112,7 @@ class TransactionController extends Controller
 
                 if ($product->stock < $item['quantity']) {
                     return response()->json([
-                        'message' => "Stock verification failed for {$product->name}. Requested: {$item['quantity']}, Available: {$product->stock}"
+                        'message' => "Stok tidak mencukupi untuk {$product->name}. Diminta: {$item['quantity']}, Tersedia: {$product->stock}"
                     ], 400);
                 }
 
@@ -162,7 +162,7 @@ class TransactionController extends Controller
             $transaction->load('items');
 
             return response()->json([
-                'message' => 'Transaction created successfully',
+                'message' => 'Transaksi berhasil dibuat',
                 'transaction' => $transaction
             ], 201);
         });
