@@ -1012,6 +1012,35 @@
 						"description": "Mendapatkan detail transaksi beserta daftar item yang dibeli\n\n**Path Parameters:**\n- `id` (integer, required): ID transaksi\n\n**Response (200):**\n- Data lengkap transaksi dengan:\n  - `items`: Array of transaction items\n  - `user`: Data kasir yang membuat transaksi\n\n**Error (404):** Transaction not found"
 					},
 					"response": []
+				},
+				{
+					"name": "Delete Transaction",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions/1",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "1"]
+						},
+						"description": "Menghapus transaksi dan mengembalikan stok produk yang terjual\n\n**Path Parameters:**\n- `id` (integer, required): ID transaksi\n\n**Response (200):**\n- `message`: Transaksi berhasil dihapus\n\n**Error (404):** Transaction not found"
+					},
+					"response": []
 				}
 			]
 		},

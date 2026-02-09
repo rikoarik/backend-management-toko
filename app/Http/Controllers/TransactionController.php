@@ -285,4 +285,50 @@ class TransactionController extends Controller
     {
         return response()->json(Transaction::with(['items', 'user'])->findOrFail($id));
     }
+
+    #[OA\Delete(
+        path: '/api/v1/transactions/{id}',
+        summary: 'Delete transaction',
+        description: 'Menghapus transaksi dan mengembalikan stok produk yang terjual',
+        security: [['sanctum' => []]],
+        tags: ['Transactions'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', description: 'ID transaksi', required: true, schema: new OA\Schema(type: 'integer', example: 1))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Transaksi berhasil dihapus',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'message', type: 'string', example: 'Transaksi berhasil dihapus'),
+                ])
+            ),
+            new OA\Response(response: 404, description: 'Transaction not found')
+        ]
+    )]
+    public function destroy($id)
+    {
+        $transaction = Transaction::with('items')->findOrFail($id);
+
+        return DB::transaction(function () use ($transaction) {
+            // Restore stock for each item
+            foreach ($transaction->items as $item) {
+                $product = Product::find($item->product_id);
+                if ($product) {
+                    $product->stock += $item->quantity;
+                    $product->save();
+                }
+            }
+
+            // Delete transaction items first
+            $transaction->items()->delete();
+
+            // Delete the transaction
+            $transaction->delete();
+
+            return response()->json([
+                'message' => 'Transaksi berhasil dihapus'
+            ]);
+        });
+    }
 }
