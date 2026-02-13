@@ -44,6 +44,7 @@ Route::prefix('v1')->group(function () {
         Route::prefix('reports')->group(function () {
             Route::get('dashboard', [\App\Http\Controllers\ReportController::class, 'dashboard']);
             Route::get('sales', [\App\Http\Controllers\ReportController::class, 'sales']);
+            Route::get('transactions/export', [\App\Http\Controllers\ReportController::class, 'exportTransactions']);
         });
     });
 });

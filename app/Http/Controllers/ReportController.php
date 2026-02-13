@@ -40,9 +40,9 @@ class ReportController extends Controller
             ->sum('quantity');
 
         return response()->json([
-            'today_sales' => (float)$todaySales,
+            'today_sales' => (float) $todaySales,
             'today_transactions' => $todayTransactions,
-            'total_products_sold' => (int)$totalProductsSold
+            'total_products_sold' => (int) $totalProductsSold
         ]);
     }
 
@@ -54,31 +54,31 @@ class ReportController extends Controller
         tags: ['Reports'],
         parameters: [
             new OA\Parameter(
-                name: 'type', 
-                in: 'query', 
-                description: 'Tipe laporan: daily (harian) atau monthly (bulanan)', 
-                required: true, 
+                name: 'type',
+                in: 'query',
+                description: 'Tipe laporan: daily (harian) atau monthly (bulanan)',
+                required: true,
                 schema: new OA\Schema(type: 'string', enum: ['daily', 'monthly'], example: 'daily')
             ),
             new OA\Parameter(
-                name: 'start_date', 
-                in: 'query', 
-                description: 'Tanggal mulai (wajib jika type=daily, format: YYYY-MM-DD)', 
-                required: false, 
+                name: 'start_date',
+                in: 'query',
+                description: 'Tanggal mulai (wajib jika type=daily, format: YYYY-MM-DD)',
+                required: false,
                 schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-01')
             ),
             new OA\Parameter(
-                name: 'end_date', 
-                in: 'query', 
-                description: 'Tanggal akhir (wajib jika type=daily, format: YYYY-MM-DD)', 
-                required: false, 
+                name: 'end_date',
+                in: 'query',
+                description: 'Tanggal akhir (wajib jika type=daily, format: YYYY-MM-DD)',
+                required: false,
                 schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-31')
             ),
             new OA\Parameter(
-                name: 'month', 
-                in: 'query', 
-                description: 'Bulan laporan (wajib jika type=monthly, format: YYYY-MM)', 
-                required: false, 
+                name: 'month',
+                in: 'query',
+                description: 'Bulan laporan (wajib jika type=monthly, format: YYYY-MM)',
+                required: false,
                 schema: new OA\Schema(type: 'string', example: '2024-01')
             ),
         ],
@@ -87,7 +87,7 @@ class ReportController extends Controller
                 response: 200,
                 description: 'Laporan penjualan',
                 content: new OA\JsonContent(
-                    type: 'array', 
+                    type: 'array',
                     items: new OA\Items(
                         properties: [
                             new OA\Property(property: 'date', type: 'string', example: '2024-01-14', description: 'Tanggal'),
@@ -120,10 +120,10 @@ class ReportController extends Controller
                 DB::raw('SUM(final_amount) as total_sales'),
                 DB::raw('COUNT(*) as total_transactions')
             )
-            ->whereBetween('created_at', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59'])
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+                ->whereBetween('created_at', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59'])
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
         } else {
             // Monthly means daily breakdown for that month? Or just one row? 
             // Usually "Monthly Report" implies seeing daily performance IN that month.
@@ -137,13 +137,123 @@ class ReportController extends Controller
                 DB::raw('SUM(final_amount) as total_sales'),
                 DB::raw('COUNT(*) as total_transactions')
             )
-            ->whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
         }
 
-        return response()->json($report);
+    }
+
+    #[OA\Get(
+        path: '/api/v1/reports/transactions/export',
+        summary: 'Export Transaction Report (CSV)',
+        description: 'Mengunduh laporan transaksi dalam format CSV berdasarkan rentang tanggal. File akan otomatis terunduh dengan nama transactions_{start}_{end}.csv',
+        security: [['sanctum' => []]],
+        tags: ['Reports'],
+        parameters: [
+            new OA\Parameter(
+                name: 'start_date',
+                in: 'query',
+                description: 'Tanggal mulai (wajib, format: YYYY-MM-DD)',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-01')
+            ),
+            new OA\Parameter(
+                name: 'end_date',
+                in: 'query',
+                description: 'Tanggal akhir (wajib, format: YYYY-MM-DD)',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-31')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'File CSV berhasil diunduh',
+                content: new OA\MediaType(
+                    mediaType: 'text/csv',
+                    schema: new OA\Schema(type: 'string', format: 'binary')
+                )
+            ),
+            new OA\Response(response: 422, description: 'Validation Error')
+        ]
+    )]
+    public function exportTransactions(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+        $fileName = "transactions_{$startDate}_{$endDate}.csv";
+
+        return response()->streamDownload(function () use ($startDate, $endDate) {
+            $handle = fopen('php://output', 'w');
+
+            // Add BOM for Excel compatibility (UTF-8)
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Header Row
+            fputcsv($handle, [
+                'Date',
+                'Transaction Code',
+                'Customer Name',
+                'Product Name',
+                'Category',
+                'Quantity',
+                'Unit Price',
+                'Subtotal',
+                'Payment Method',
+                'Status',
+                'Notes'
+            ]);
+
+            // Data Rows - Efficient query with chunking to avoid memory issues
+            $query = \App\Models\TransactionItem::query()
+                ->select([
+                    'transaction_items.*',
+                    'transactions.transaction_code',
+                    'transactions.created_at as transaction_date',
+                    'transactions.payment_method',
+                    'transactions.status as transaction_status',
+                    'transactions.notes as transaction_notes',
+                    'users.name as customer_name',
+                    'products.name as product_name',
+                    'categories.name as category_name'
+                ])
+                ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
+                ->join('products', 'transaction_items.product_id', '=', 'products.id')
+                ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+                ->leftJoin('users', 'transactions.user_id', '=', 'users.id')
+                ->whereBetween('transactions.created_at', [
+                    $startDate . ' 00:00:00',
+                    $endDate . ' 23:59:59'
+                ])
+                ->orderBy('transactions.created_at');
+
+            foreach ($query->cursor() as $item) {
+                fputcsv($handle, [
+                    $item->transaction_date,
+                    $item->transaction_code,
+                    $item->customer_name ?? 'Guest',
+                    $item->product_name,
+                    $item->category_name ?? '-',
+                    $item->quantity,
+                    $item->unit_price,
+                    $item->subtotal,
+                    $item->payment_method,
+                    $item->transaction_status,
+                    $item->transaction_notes
+                ]);
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 }

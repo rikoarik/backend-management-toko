@@ -1467,6 +1467,47 @@
 						"description": "Mendapatkan laporan penjualan bulanan (breakdown harian dalam bulan tersebut)\n\n**Query Parameters:**\n- `type` (string, required): \"monthly\"\n- `month` (string, required): Bulan (YYYY-MM)\n\n**Response (200):** Array of daily sales data dalam bulan tersebut:\n- `date`: Tanggal\n- `total_sales`: Total penjualan\n- `total_transactions`: Jumlah transaksi"
 					},
 					"response": []
+				},
+				{
+					"name": "Export Transactions (CSV)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/transactions/export?start_date=2024-01-01&end_date=2024-01-31",
+							"host": ["{{base_url}}"],
+							"path": ["reports", "transactions", "export"],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2024-01-01",
+									"description": "Tanggal mulai (YYYY-MM-DD)"
+								},
+								{
+									"key": "end_date",
+									"value": "2024-01-31",
+									"description": "Tanggal akhir (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Export data transaksi ke CSV berdasarkan rentang tanggal\n\n**Query Parameters:**\n- `start_date` (string, required): Tanggal mulai (YYYY-MM-DD)\n- `end_date` (string, required): Tanggal akhir (YYYY-MM-DD)\n\n**Response (200):** File CSV download"
+					},
+					"response": []
 				}
 			]
 		}
