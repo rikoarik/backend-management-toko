@@ -1469,7 +1469,7 @@
 					"response": []
 				},
 				{
-					"name": "Export Transactions (CSV)",
+					"name": "Export Transactions (Excel)",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -1485,7 +1485,7 @@
 						"header": [
 							{
 								"key": "Accept",
-								"value": "application/json"
+								"value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 							}
 						],
 						"url": {
@@ -1505,7 +1505,7 @@
 								}
 							]
 						},
-						"description": "Export data transaksi ke CSV berdasarkan rentang tanggal\n\n**Query Parameters:**\n- `start_date` (string, required): Tanggal mulai (YYYY-MM-DD)\n- `end_date` (string, required): Tanggal akhir (YYYY-MM-DD)\n\n**Response (200):** File CSV download"
+						"description": "Export data transaksi ke Excel (.xlsx) berdasarkan rentang tanggal.\n\n**Query Parameters:**\n- `start_date` (string, required): Tanggal mulai (YYYY-MM-DD)\n- `end_date` (string, required): Tanggal akhir (YYYY-MM-DD)\n\n**Response (200):** File Excel (.xlsx) download\n\n**Di Postman:** Klik dropdown arrow di tombol Send lalu pilih 'Send and Download' supaya file terdownload."
 					},
 					"response": []
 				}
