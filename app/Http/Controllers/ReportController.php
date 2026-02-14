@@ -144,12 +144,13 @@ class ReportController extends Controller
                 ->get();
         }
 
+        return response()->json($report);
     }
 
     #[OA\Get(
         path: '/api/v1/reports/transactions/export',
-        summary: 'Export Transaction Report (Excel)',
-        description: 'Mengunduh laporan transaksi dalam format Excel (.xlsx) berdasarkan rentang tanggal.',
+        summary: 'Export Transaction Report (CSV)',
+        description: 'Mengunduh laporan transaksi dalam format CSV berdasarkan rentang tanggal.',
         security: [['sanctum' => []]],
         tags: ['Reports'],
         parameters: [
@@ -171,9 +172,9 @@ class ReportController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'File Excel berhasil diunduh',
+                description: 'File CSV berhasil diunduh',
                 content: new OA\MediaType(
-                    mediaType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    mediaType: 'text/csv',
                     schema: new OA\Schema(type: 'string', format: 'binary')
                 )
             ),
@@ -189,8 +190,76 @@ class ReportController extends Controller
 
         $startDate = $request->start_date;
         $endDate = $request->end_date;
-        $fileName = "transactions_{$startDate}_{$endDate}.xlsx";
+        $fileName = "transactions_{$startDate}_{$endDate}.csv";
 
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\TransactionsExport($startDate, $endDate), $fileName);
+        $items = DB::table('transaction_items')
+            ->select([
+                'transactions.created_at as transaction_date',
+                'transactions.transaction_code',
+                'users.name as customer_name',
+                'products.name as product_name',
+                'categories.name as category_name',
+                'transaction_items.quantity',
+                'transaction_items.unit_price',
+                'transaction_items.subtotal',
+                'transactions.payment_method',
+                'transactions.status as transaction_status',
+                'transactions.notes as transaction_notes',
+            ])
+            ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
+            ->join('products', 'transaction_items.product_id', '=', 'products.id')
+            ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+            ->leftJoin('users', 'transactions.user_id', '=', 'users.id')
+            ->whereBetween('transactions.created_at', [
+                $startDate . ' 00:00:00',
+                $endDate . ' 23:59:59'
+            ])
+            ->orderBy('transactions.created_at')
+            ->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ];
+
+        $callback = function () use ($items) {
+            $file = fopen('php://output', 'w');
+
+            // Header row
+            fputcsv($file, [
+                'Date',
+                'Transaction Code',
+                'Customer Name',
+                'Product Name',
+                'Category',
+                'Quantity',
+                'Unit Price',
+                'Subtotal',
+                'Payment Method',
+                'Status',
+                'Notes'
+            ]);
+
+            // Data rows
+            foreach ($items as $item) {
+                fputcsv($file, [
+                    $item->transaction_date,
+                    $item->transaction_code,
+                    $item->customer_name ?? 'Guest',
+                    $item->product_name,
+                    $item->category_name ?? '-',
+                    $item->quantity,
+                    $item->unit_price,
+                    $item->subtotal,
+                    $item->payment_method,
+                    $item->transaction_status,
+                    $item->transaction_notes,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
