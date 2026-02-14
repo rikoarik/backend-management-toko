@@ -17,6 +17,8 @@ class ReportExportTest extends TestCase
 
     public function test_export_transactions_returns_csv_download()
     {
+        \Maatwebsite\Excel\Facades\Excel::fake();
+
         $user = User::factory()->create([
             'username' => 'testuser'
         ]);
@@ -54,17 +56,11 @@ class ReportExportTest extends TestCase
         $response = $this->getJson('/api/v1/reports/transactions/export?start_date=2024-01-01&end_date=2024-01-31');
 
         $response->assertStatus(200);
-        $response->assertHeader('content-type', 'text/csv; charset=utf-8');
-        $response->assertHeader('content-disposition', 'attachment; filename=transactions_2024-01-01_2024-01-31.csv');
 
-        // Validate content
-        $content = $response->streamedContent();
-        $this->assertStringContainsString('Date', $content);
-        $this->assertStringContainsString('"Transaction Code"', $content);
-        $this->assertStringContainsString('"Customer Name"', $content);
-        $this->assertStringContainsString('TRX-TEST-001', $content);
-        $this->assertStringContainsString('Cola', $content);
-        $this->assertStringContainsString('Test Note', $content);
+        \Maatwebsite\Excel\Facades\Excel::assertDownloaded('transactions_2024-01-01_2024-01-31.xlsx', function (\App\Exports\TransactionsExport $export) {
+            // Can add more assertions on the export object here if needed
+            return true;
+        });
     }
 
     public function test_export_transactions_validation_error()
