@@ -19,7 +19,7 @@ class Expense extends Model
 
     protected $casts = [
         'amount' => 'integer',
-        'expense_date' => 'date',
+        'expense_date' => 'date:Y-m-d',
     ];
 
     // Expense categories
