@@ -14,6 +14,7 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
 {
     protected $startDate;
     protected $endDate;
+    private $lastTransactionCode = null;
 
     public function __construct($startDate, $endDate)
     {
@@ -43,7 +44,8 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
                 $this->startDate . ' 00:00:00',
                 $this->endDate . ' 23:59:59'
             ])
-            ->orderBy('transactions.created_at');
+            ->orderBy('transactions.created_at')
+            ->orderBy('transactions.id');
     }
 
     public function headings(): array
@@ -65,6 +67,14 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
 
     public function map($item): array
     {
+        $discount = $item->discount_amount;
+
+        if ($this->lastTransactionCode === $item->transaction_code) {
+            $discount = '';
+        } else {
+            $this->lastTransactionCode = $item->transaction_code;
+        }
+
         return [
             $item->transaction_date,
             $item->transaction_code,
@@ -73,7 +83,7 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
             $item->quantity,
             $item->unit_price,
             $item->subtotal,
-            $item->discount_amount,
+            $discount,
             $item->payment_method,
             $item->transaction_status,
             $item->transaction_notes
