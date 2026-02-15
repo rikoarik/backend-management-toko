@@ -5,12 +5,11 @@ namespace App\Exports;
 use App\Models\TransactionItem;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class TransactionsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths
+class TransactionsExport implements FromCollection, WithHeadings, WithStyles, WithColumnWidths
 {
     protected $startDate;
     protected $endDate;
@@ -51,18 +50,34 @@ class TransactionsExport implements FromCollection, WithHeadings, WithMapping, W
             ->get();
 
         $lastCode = null;
+        $output = [];
 
-        // Pre-process grouping logic for discount
         foreach ($data as $item) {
-            if ($item->transaction_code === $lastCode) {
-                $item->display_discount = '';
-            } else {
-                $item->display_discount = $item->discount_amount;
-                $lastCode = $item->transaction_code;
-            }
+            $discount = ($item->transaction_code === $lastCode) ? '' : $item->discount_amount;
+            $lastCode = $item->transaction_code;
+
+            // Format date if needed, or keep as Y-m-d H:i:s
+            // $item->transaction_date is a string from DB or Carbon object if casted.
+            // Since we joined, it's likely a string unless we hydrate models which we did.
+            // TransactionItem model has SerializesDateToLocal trait now, so serialization is safe.
+            // But here we are building array manually.
+
+            $output[] = [
+                'Date' => $item->transaction_date, // or format it: \Carbon\Carbon::parse($item->transaction_date)->format('Y-m-d H:i:s')
+                'Transaction Code' => $item->transaction_code,
+                'Product Name' => $item->product_name,
+                'Category' => $item->category_name ?? '-',
+                'Quantity' => $item->quantity,
+                'Unit Price' => $item->unit_price,
+                'Subtotal' => $item->subtotal,
+                'Discount' => $discount,
+                'Payment Method' => $item->payment_method,
+                'Status' => $item->transaction_status,
+                'Notes' => $item->transaction_notes
+            ];
         }
 
-        return $data;
+        return collect($output);
     }
 
     public function headings(): array
@@ -79,23 +94,6 @@ class TransactionsExport implements FromCollection, WithHeadings, WithMapping, W
             'Payment Method',
             'Status',
             'Notes'
-        ];
-    }
-
-    public function map($item): array
-    {
-        return [
-            $item->transaction_date,
-            $item->transaction_code,
-            $item->product_name,
-            $item->category_name ?? '-',
-            $item->quantity,
-            $item->unit_price,
-            $item->subtotal,
-            $item->display_discount,
-            $item->payment_method,
-            $item->transaction_status,
-            $item->transaction_notes
         ];
     }
 
