@@ -71,7 +71,7 @@ class ExpenseController extends Controller
         }
 
         $size = $request->input('size', 10);
-        return response()->json($query->latest('expense_date')->paginate($size));
+        return response()->json($query->orderByDesc('expense_date')->latest()->paginate($size));
     }
 
     #[OA\Post(
