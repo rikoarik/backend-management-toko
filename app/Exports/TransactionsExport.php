@@ -45,8 +45,8 @@ class TransactionsExport implements FromCollection, WithHeadings, WithStyles, Wi
                 $this->startDate . ' 00:00:00',
                 $this->endDate . ' 23:59:59'
             ])
-            ->orderBy('transactions.created_at')
-            ->orderBy('transactions.id')
+            ->orderByDesc('transactions.created_at')
+            ->orderByDesc('transactions.id')
             ->get();
 
         $lastCode = null;
@@ -56,14 +56,14 @@ class TransactionsExport implements FromCollection, WithHeadings, WithStyles, Wi
             $discount = ($item->transaction_code === $lastCode) ? '' : $item->discount_amount;
             $lastCode = $item->transaction_code;
 
-            // Format date if needed, or keep as Y-m-d H:i:s
-            // $item->transaction_date is a string from DB or Carbon object if casted.
-            // Since we joined, it's likely a string unless we hydrate models which we did.
-            // TransactionItem model has SerializesDateToLocal trait now, so serialization is safe.
-            // But here we are building array manually.
+            // Ensure date is a formatted string
+            $dateStr = $item->transaction_date;
+            if ($dateStr instanceof \DateTimeInterface) {
+                $dateStr = $dateStr->setTimezone(new \DateTimeZone(config('app.timezone')))->format('Y-m-d H:i:s');
+            }
 
             $output[] = [
-                'Date' => $item->transaction_date, // or format it: \Carbon\Carbon::parse($item->transaction_date)->format('Y-m-d H:i:s')
+                'Date' => (string) $dateStr,
                 'Transaction Code' => $item->transaction_code,
                 'Product Name' => $item->product_name,
                 'Category' => $item->category_name ?? '-',
