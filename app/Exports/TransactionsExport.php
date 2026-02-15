@@ -3,18 +3,17 @@
 namespace App\Exports;
 
 use App\Models\TransactionItem;
-use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithStyles, WithColumnWidths
+class TransactionsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths
 {
     protected $startDate;
     protected $endDate;
-    private $lastTransactionCode = null;
 
     public function __construct($startDate, $endDate)
     {
@@ -22,9 +21,12 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
         $this->endDate = $endDate;
     }
 
-    public function query()
+    /**
+     * @return \Illuminate\Support\Collection
+     */
+    public function collection()
     {
-        return TransactionItem::query()
+        $data = TransactionItem::query()
             ->select([
                 'transaction_items.*',
                 'transactions.transaction_code',
@@ -45,7 +47,22 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
                 $this->endDate . ' 23:59:59'
             ])
             ->orderBy('transactions.created_at')
-            ->orderBy('transactions.id');
+            ->orderBy('transactions.id')
+            ->get();
+
+        $lastCode = null;
+
+        // Pre-process grouping logic for discount
+        foreach ($data as $item) {
+            if ($item->transaction_code === $lastCode) {
+                $item->display_discount = '';
+            } else {
+                $item->display_discount = $item->discount_amount;
+                $lastCode = $item->transaction_code;
+            }
+        }
+
+        return $data;
     }
 
     public function headings(): array
@@ -67,14 +84,6 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
 
     public function map($item): array
     {
-        $discount = $item->discount_amount;
-
-        if ($this->lastTransactionCode === $item->transaction_code) {
-            $discount = '';
-        } else {
-            $this->lastTransactionCode = $item->transaction_code;
-        }
-
         return [
             $item->transaction_date,
             $item->transaction_code,
@@ -83,7 +92,7 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
             $item->quantity,
             $item->unit_price,
             $item->subtotal,
-            $discount,
+            $item->display_discount,
             $item->payment_method,
             $item->transaction_status,
             $item->transaction_notes
