@@ -31,7 +31,7 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
                 'transactions.payment_method',
                 'transactions.status as transaction_status',
                 'transactions.notes as transaction_notes',
-                'users.name as customer_name',
+                'transactions.discount_amount',
                 'products.name as product_name',
                 'categories.name as category_name'
             ])
@@ -51,12 +51,12 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
         return [
             'Date',
             'Transaction Code',
-            'Customer Name',
             'Product Name',
             'Category',
             'Quantity',
             'Unit Price',
             'Subtotal',
+            'Discount',
             'Payment Method',
             'Status',
             'Notes'
@@ -68,12 +68,12 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
         return [
             $item->transaction_date,
             $item->transaction_code,
-            $item->customer_name ?? 'Guest',
             $item->product_name,
             $item->category_name ?? '-',
             $item->quantity,
             $item->unit_price,
             $item->subtotal,
+            $item->discount_amount,
             $item->payment_method,
             $item->transaction_status,
             $item->transaction_notes
@@ -92,15 +92,15 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithSt
         return [
             'A' => 20,
             'B' => 25,
-            'C' => 25,
-            'D' => 25,
-            'E' => 15,
-            'F' => 10,
-            'G' => 15,
-            'H' => 15,
-            'I' => 15,
-            'J' => 15,
-            'K' => 30,
+            'C' => 25, // Product Name
+            'D' => 15, // Category
+            'E' => 10, // Quantity
+            'F' => 15, // Unit Price
+            'G' => 15, // Subtotal
+            'H' => 15, // Discount
+            'I' => 15, // Payment Method
+            'J' => 15, // Status
+            'K' => 30, // Notes
         ];
     }
 }
