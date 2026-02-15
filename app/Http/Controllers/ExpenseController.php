@@ -123,12 +123,16 @@ class ExpenseController extends Controller
             'expense_date' => 'required|date',
         ]);
 
+        $expenseDate = \Carbon\Carbon::parse($request->expense_date)
+            ->setTimezone(config('app.timezone'))
+            ->format('Y-m-d');
+
         $expense = Expense::create([
             'user_id' => auth()->id(),
             'category' => $request->category,
             'amount' => $request->amount,
             'description' => $request->description,
-            'expense_date' => $request->expense_date,
+            'expense_date' => $expenseDate,
         ]);
 
         return response()->json([
@@ -228,7 +232,15 @@ class ExpenseController extends Controller
             'expense_date' => 'sometimes|date',
         ]);
 
-        $expense->update($request->only(['category', 'amount', 'description', 'expense_date']));
+        $data = $request->only(['category', 'amount', 'description', 'expense_date']);
+
+        if ($request->has('expense_date')) {
+            $data['expense_date'] = \Carbon\Carbon::parse($request->expense_date)
+                ->setTimezone(config('app.timezone'))
+                ->format('Y-m-d');
+        }
+
+        $expense->update($data);
 
         return response()->json([
             'message' => 'Pengeluaran berhasil diperbarui',
