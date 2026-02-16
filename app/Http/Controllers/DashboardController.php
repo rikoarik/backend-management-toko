@@ -69,10 +69,11 @@ class DashboardController extends Controller
             ? Carbon::parse($request->start_date)
             : $endDate->copy()->subDays(6);
 
-        // Get income (pemasukan) from transactions
-        $income = Transaction::select(
+        // Get income (pemasukan) and gross profit from transactions
+        $transactionData = Transaction::select(
             DB::raw('DATE(created_at) as date'),
-            DB::raw('SUM(final_amount) as total')
+            DB::raw('SUM(final_amount) as total_revenue'),
+            DB::raw('SUM(total_profit) as total_profit')
         )
             ->where('status', 'completed')
             ->whereBetween('created_at', [
@@ -80,8 +81,8 @@ class DashboardController extends Controller
                 $endDate->copy()->endOfDay()
             ])
             ->groupBy(DB::raw('DATE(created_at)'))
-            ->pluck('total', 'date')
-            ->toArray();
+            ->get()
+            ->keyBy('date');
 
         // Get expenses (pengeluaran)
         $expenses = Expense::select(
@@ -100,22 +101,28 @@ class DashboardController extends Controller
         $chartData = [];
         $totalPemasukan = 0;
         $totalPengeluaran = 0;
+        $totalGrossProfit = 0;
 
         $currentDate = $startDate->copy();
         while ($currentDate <= $endDate) {
             $dateKey = $currentDate->format('Y-m-d');
 
-            $pemasukan = $income[$dateKey] ?? 0;
+            $dayData = $transactionData->get($dateKey);
+            $pemasukan = $dayData ? $dayData->total_revenue : 0;
+            $grossProfit = $dayData ? $dayData->total_profit : 0;
+
             $pengeluaran = $expenses[$dateKey] ?? 0;
 
             $totalPemasukan += $pemasukan;
             $totalPengeluaran += $pengeluaran;
+            $totalGrossProfit += $grossProfit;
 
             $chartData[] = [
                 'date' => $dateKey,
                 'label' => $currentDate->format('j M'), // "1 Jan", "2 Jan", etc.
                 'pemasukan' => (int) $pemasukan,
                 'pengeluaran' => (int) $pengeluaran,
+                'profit' => (int) ($grossProfit - $pengeluaran), // Net Profit per day
             ];
 
             $currentDate->addDay();
@@ -126,7 +133,7 @@ class DashboardController extends Controller
             'summary' => [
                 'total_pemasukan' => $totalPemasukan,
                 'total_pengeluaran' => $totalPengeluaran,
-                'profit' => $totalPemasukan - $totalPengeluaran,
+                'profit' => $totalGrossProfit - $totalPengeluaran, // Net Profit
             ],
             'period' => [
                 'start_date' => $startDate->format('Y-m-d'),
@@ -175,6 +182,10 @@ class DashboardController extends Controller
             ->where('status', 'completed')
             ->sum('final_amount');
 
+        $grossProfitToday = Transaction::whereDate('created_at', $today)
+            ->where('status', 'completed')
+            ->sum('total_profit');
+
         $expenseToday = Expense::whereDate('expense_date', $today)
             ->sum('amount');
 
@@ -186,7 +197,7 @@ class DashboardController extends Controller
             'transactions_today' => $transactionsToday,
             'income_today' => (int) $incomeToday,
             'expense_today' => (int) $expenseToday,
-            'profit_today' => (int) ($incomeToday - $expenseToday),
+            'profit_today' => (int) ($grossProfitToday - $expenseToday),
             'low_stock_products' => $lowStockProducts,
         ]);
     }

@@ -99,6 +99,7 @@ class TransactionController extends Controller
             'items.*.price_type' => 'nullable|string|in:standard,wholesale,retail',
             'discount_amount' => 'integer|min:0',
             'payment_method' => 'required|string',
+            'paid_amount' => 'required|integer|min:0',
             'notes' => 'nullable|string',
         ]);
 
@@ -130,25 +131,45 @@ class TransactionController extends Controller
                 $subtotal = $unitPrice * $item['quantity'];
                 $totalAmount += $subtotal;
 
+                // Calculate profit for this item
+                $costPrice = $product->cost_price ?? 0;
+                $itemProfit = ($unitPrice - $costPrice) * $item['quantity'];
+
                 $transactionItems[] = [
                     'product_id' => $product->id,
                     'product_name' => $product->name,
                     'quantity' => $item['quantity'],
                     'unit_price' => $unitPrice,
-                    'cost_price' => $product->cost_price ?? 0,
+                    'cost_price' => $costPrice,
                     'subtotal' => $subtotal,
+                    'profit' => $itemProfit,
                 ];
             }
 
             // 2. Create Transaction Header
             $finalAmount = $totalAmount - ($request->discount_amount ?? 0);
+            $finalAmount = max(0, $finalAmount);
+
+            if ($request->paid_amount < $finalAmount) {
+                return response()->json([
+                    'message' => 'Uang yang dibayarkan kurang. Total: ' . $finalAmount . ', Dibayar: ' . $request->paid_amount
+                ], 400);
+            }
+
+            $changeAmount = $request->paid_amount - $finalAmount;
+
+            // Calculate total profit
+            $totalProfit = collect($transactionItems)->sum('profit');
 
             $transaction = Transaction::create([
                 'transaction_code' => 'TRX-' . time() . '-' . mt_rand(100, 999),
                 'user_id' => auth()->id(),
                 'total_amount' => $totalAmount,
                 'discount_amount' => $request->discount_amount ?? 0,
-                'final_amount' => max(0, $finalAmount),
+                'final_amount' => $finalAmount,
+                'paid_amount' => $request->paid_amount,
+                'change_amount' => $changeAmount,
+                'total_profit' => $totalProfit,
                 'payment_method' => $request->payment_method,
                 'status' => 'completed',
                 'notes' => $request->notes,
@@ -331,4 +352,6 @@ class TransactionController extends Controller
             ]);
         });
     }
+
+
 }

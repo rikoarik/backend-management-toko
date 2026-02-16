@@ -17,7 +17,8 @@ class TransactionItem extends Model
         'quantity',
         'unit_price',
         'cost_price',
-        'subtotal'
+        'subtotal',
+        'profit'
     ];
 
     protected $casts = [
@@ -25,6 +26,7 @@ class TransactionItem extends Model
         'unit_price' => 'integer',
         'cost_price' => 'integer',
         'subtotal' => 'integer',
+        'profit' => 'integer',
     ];
 
     public function transaction()

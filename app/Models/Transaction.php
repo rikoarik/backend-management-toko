@@ -16,6 +16,9 @@ class Transaction extends Model
         'total_amount',
         'discount_amount',
         'final_amount',
+        'paid_amount',
+        'change_amount',
+        'total_profit',
         'payment_method',
         'status',
         'notes'
@@ -25,6 +28,9 @@ class Transaction extends Model
         'total_amount' => 'integer',
         'discount_amount' => 'integer',
         'final_amount' => 'integer',
+        'paid_amount' => 'integer',
+        'change_amount' => 'integer',
+        'total_profit' => 'integer',
     ];
 
     public function user()
