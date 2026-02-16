@@ -12,7 +12,7 @@ class ReportController extends Controller
     #[OA\Get(
         path: '/api/v1/reports/dashboard',
         summary: 'Get Today\'s Dashboard Summary',
-        description: 'Mendapatkan ringkasan dashboard untuk hari ini: total penjualan, jumlah transaksi, dan produk terjual',
+        description: 'Mendapatkan ringkasan dashboard untuk hari ini: total penjualan, jumlah transaksi, produk terjual, dan keuntungan',
         security: [['sanctum' => []]],
         tags: ['Reports'],
         responses: [
@@ -23,6 +23,7 @@ class ReportController extends Controller
                     new OA\Property(property: 'today_sales', type: 'number', example: 1500000, description: 'Total penjualan hari ini (dalam Rupiah)'),
                     new OA\Property(property: 'today_transactions', type: 'integer', example: 45, description: 'Jumlah transaksi hari ini'),
                     new OA\Property(property: 'total_products_sold', type: 'integer', example: 120, description: 'Total produk terjual hari ini'),
+                    new OA\Property(property: 'today_profit', type: 'number', example: 500000, description: 'Total keuntungan hari ini'),
                 ])
             ),
             new OA\Response(response: 401, description: 'Unauthenticated')
@@ -39,10 +40,18 @@ class ReportController extends Controller
             ->whereDate('transactions.created_at', $today)
             ->sum('quantity');
 
+        $todayCost = DB::table('transaction_items')
+            ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
+            ->whereDate('transactions.created_at', $today)
+            ->sum(DB::raw('transaction_items.cost_price * transaction_items.quantity'));
+
+        $todayProfit = $todaySales - $todayCost;
+
         return response()->json([
             'today_sales' => (float) $todaySales,
             'today_transactions' => $todayTransactions,
-            'total_products_sold' => (int) $totalProductsSold
+            'total_products_sold' => (int) $totalProductsSold,
+            'today_profit' => (float) $todayProfit
         ]);
     }
 
@@ -93,12 +102,13 @@ class ReportController extends Controller
                             new OA\Property(property: 'date', type: 'string', example: '2024-01-14', description: 'Tanggal'),
                             new OA\Property(property: 'total_sales', type: 'number', example: 1500000, description: 'Total penjualan'),
                             new OA\Property(property: 'total_transactions', type: 'integer', example: 45, description: 'Jumlah transaksi'),
+                            new OA\Property(property: 'total_profit', type: 'number', example: 500000, description: 'Total keuntungan'),
                         ]
                     ),
                     example: [
-                        ['date' => '2024-01-01', 'total_sales' => 1200000, 'total_transactions' => 35],
-                        ['date' => '2024-01-02', 'total_sales' => 1500000, 'total_transactions' => 42],
-                        ['date' => '2024-01-03', 'total_sales' => 980000, 'total_transactions' => 28]
+                        ['date' => '2024-01-01', 'total_sales' => 1200000, 'total_transactions' => 35, 'total_profit' => 400000],
+                        ['date' => '2024-01-02', 'total_sales' => 1500000, 'total_transactions' => 42, 'total_profit' => 500000],
+                        ['date' => '2024-01-03', 'total_sales' => 980000, 'total_transactions' => 28, 'total_profit' => 300000]
                     ]
                 )
             ),
@@ -124,11 +134,14 @@ class ReportController extends Controller
                 ->groupBy('date')
                 ->orderBy('date')
                 ->get();
+
+            $costs = DB::table('transaction_items')
+                ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
+                ->select(DB::raw('DATE(transactions.created_at) as date'), DB::raw('SUM(transaction_items.cost_price * transaction_items.quantity) as total_cost'))
+                ->whereBetween('transactions.created_at', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59'])
+                ->groupBy('date')
+                ->pluck('total_cost', 'date');
         } else {
-            // Monthly means daily breakdown for that month? Or just one row? 
-            // Usually "Monthly Report" implies seeing daily performance IN that month.
-            // Or it could mean 'Yearly Report' broken down by month.
-            // Let's assume Daily breakdown FOR the selected month.
             $year = substr($request->month, 0, 4);
             $month = substr($request->month, 5, 2);
 
@@ -142,7 +155,21 @@ class ReportController extends Controller
                 ->groupBy('date')
                 ->orderBy('date')
                 ->get();
+
+            $costs = DB::table('transaction_items')
+                ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
+                ->select(DB::raw('DATE(transactions.created_at) as date'), DB::raw('SUM(transaction_items.cost_price * transaction_items.quantity) as total_cost'))
+                ->whereYear('transactions.created_at', $year)
+                ->whereMonth('transactions.created_at', $month)
+                ->groupBy('date')
+                ->pluck('total_cost', 'date');
         }
+
+        $report->transform(function ($item) use ($costs) {
+            $cost = $costs[$item->date] ?? 0;
+            $item->total_profit = (float) $item->total_sales - $cost;
+            return $item;
+        });
 
         return response()->json($report);
     }

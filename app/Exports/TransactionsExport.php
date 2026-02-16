@@ -45,8 +45,8 @@ class TransactionsExport implements FromCollection, WithHeadings, WithStyles, Wi
                 $this->startDate . ' 00:00:00',
                 $this->endDate . ' 23:59:59'
             ])
-            ->orderByDesc('transactions.created_at')
-            ->orderByDesc('transactions.id')
+            ->orderBy('transactions.created_at')
+            ->orderBy('transactions.id')
             ->get();
 
         $lastCode = null;
