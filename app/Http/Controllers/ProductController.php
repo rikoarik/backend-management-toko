@@ -177,7 +177,7 @@ class ProductController extends Controller
 
         if ($request->filled('cost_price') && (int) $request->cost_price > (int) $request->price) {
             return response()->json([
-                'message' => 'Harga beli tidak boleh lebih besar dari harga jual.',
+                'message' => 'Harga beli melebihi harga jual.',
             ], 422);
         }
 
@@ -311,7 +311,7 @@ class ProductController extends Controller
         $hargaJual = $request->filled('price') ? (int) $request->price : $product->price;
         if ($request->filled('cost_price') && (int) $request->cost_price > $hargaJual) {
             return response()->json([
-                'message' => 'Harga beli tidak boleh lebih besar dari harga jual.',
+                'message' => 'Harga beli melebihi harga jual.',
             ], 422);
         }
 
