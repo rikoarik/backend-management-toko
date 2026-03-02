@@ -339,7 +339,7 @@ class ProductController extends Controller
             $newCostPrice = (int) ($request->purchase_price / $stockAdded);
             if ($newCostPrice > $product->price) {
                 return response()->json([
-                    'message' => 'Harga beli hasil restock tidak boleh lebih besar dari harga jual.',
+                    'message' => 'Harga beli melebihi harga jual.',
                 ], 422);
             }
 
