@@ -175,6 +175,12 @@ class ProductController extends Controller
             'image' => 'nullable|image|max:2048', // Max 2MB
         ]);
 
+        if ($request->filled('cost_price') && (int) $request->cost_price > (int) $request->price) {
+            return response()->json([
+                'message' => 'Harga beli tidak boleh lebih besar dari harga jual.',
+            ], 422);
+        }
+
         $data = $request->except('image');
 
         if ($request->hasFile('image')) {
@@ -302,6 +308,13 @@ class ProductController extends Controller
             'supplier' => 'nullable|string|max:255',
         ]);
 
+        $hargaJual = $request->filled('price') ? (int) $request->price : $product->price;
+        if ($request->filled('cost_price') && (int) $request->cost_price > $hargaJual) {
+            return response()->json([
+                'message' => 'Harga beli tidak boleh lebih besar dari harga jual.',
+            ], 422);
+        }
+
         $data = $request->except(['image', '_method', 'purchase_price', 'supplier']);
 
         if ($request->hasFile('image')) {
@@ -323,6 +336,13 @@ class ProductController extends Controller
         $stockAdded = $newStock - $oldStock;
 
         if ($stockAdded > 0 && $request->filled('purchase_price')) {
+            $newCostPrice = (int) ($request->purchase_price / $stockAdded);
+            if ($newCostPrice > $product->price) {
+                return response()->json([
+                    'message' => 'Harga beli hasil restock tidak boleh lebih besar dari harga jual. Perbaiki harga beli atau harga jual produk.',
+                ], 422);
+            }
+
             $description = "Restock {$product->name} (+{$stockAdded} pcs)";
             if ($request->supplier) {
                 $description .= " dari {$request->supplier}";
@@ -337,7 +357,6 @@ class ProductController extends Controller
             ]);
 
             // Auto update cost_price based on purchase_price / added stock
-            $newCostPrice = (int) ($request->purchase_price / $stockAdded);
             $product->update(['cost_price' => $newCostPrice]);
         }
 

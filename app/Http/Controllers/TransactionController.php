@@ -117,9 +117,6 @@ class TransactionController extends Controller
                     ], 400);
                 }
 
-                $product->stock -= $item['quantity'];
-                $product->save();
-
                 // Determine price based on type
                 $priceType = $item['price_type'] ?? 'standard';
                 $unitPrice = match ($priceType) {
@@ -128,11 +125,20 @@ class TransactionController extends Controller
                     default => $product->price,
                 };
 
+                $costPrice = $product->cost_price ?? 0;
+                if ($costPrice > $unitPrice) {
+                    return response()->json([
+                        'message' => 'Data produk "' . $product->name . '" tidak valid: harga beli (Rp ' . number_format($costPrice, 0, ',', '.') . ') lebih besar dari harga jual (Rp ' . number_format($unitPrice, 0, ',', '.') . '). Perbaiki data produk terlebih dahulu.',
+                    ], 400);
+                }
+
+                $product->stock -= $item['quantity'];
+                $product->save();
+
                 $subtotal = $unitPrice * $item['quantity'];
                 $totalAmount += $subtotal;
 
                 // Calculate profit for this item
-                $costPrice = $product->cost_price ?? 0;
                 $itemProfit = ($unitPrice - $costPrice) * $item['quantity'];
 
                 $transactionItems[] = [
