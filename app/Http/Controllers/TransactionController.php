@@ -128,7 +128,7 @@ class TransactionController extends Controller
                 $costPrice = $product->cost_price ?? 0;
                 if ($costPrice > $unitPrice) {
                     return response()->json([
-                        'message' => 'Data produk "' . $product->name . '" tidak valid: harga beli (Rp ' . number_format($costPrice, 0, ',', '.') . ') lebih besar dari harga jual (Rp ' . number_format($unitPrice, 0, ',', '.') . '). Perbaiki data produk terlebih dahulu.',
+                        'message' => 'Data produk "' . $product->name . '" tidak valid: harga beli lebih besar dari harga jual.',
                     ], 400);
                 }
 
