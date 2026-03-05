@@ -39,6 +39,7 @@ class TransactionController extends Controller
                             ['product_id' => 3, 'quantity' => 1]
                         ]
                     ),
+                    new OA\Property(property: 'order_name', type: 'string', example: 'Budi Santoso', description: 'Nama pemesan untuk tracking (opsional)'),
                     new OA\Property(property: 'discount_amount', type: 'integer', example: 5000, description: 'Diskon dalam rupiah (opsional, default: 0)'),
                     new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris', 'transfer'], example: 'cash', description: 'Metode pembayaran (wajib)'),
                     new OA\Property(property: 'notes', type: 'string', example: 'Pelanggan minta kantong plastik', description: 'Catatan transaksi (opsional)'),
@@ -57,6 +58,7 @@ class TransactionController extends Controller
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 1),
                             new OA\Property(property: 'transaction_code', type: 'string', example: 'TRX-1705234567-123'),
+                            new OA\Property(property: 'order_name', type: 'string', example: 'Budi Santoso', nullable: true),
                             new OA\Property(property: 'user_id', type: 'integer', example: 1),
                             new OA\Property(property: 'total_amount', type: 'integer', example: 25000),
                             new OA\Property(property: 'discount_amount', type: 'integer', example: 5000),
@@ -97,6 +99,7 @@ class TransactionController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price_type' => 'nullable|string|in:standard,wholesale,retail',
+            'order_name' => 'nullable|string|max:255',
             'discount_amount' => 'integer|min:0',
             'payment_method' => 'required|string',
             'paid_amount' => 'required|integer|min:0',
@@ -169,6 +172,7 @@ class TransactionController extends Controller
 
             $transaction = Transaction::create([
                 'transaction_code' => 'TRX-' . time() . '-' . mt_rand(100, 999),
+                'order_name' => $request->order_name,
                 'user_id' => auth()->id(),
                 'total_amount' => $totalAmount,
                 'discount_amount' => $request->discount_amount ?? 0,
@@ -204,6 +208,7 @@ class TransactionController extends Controller
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', description: 'Nomor halaman', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'size', in: 'query', description: 'Jumlah item per halaman', required: false, schema: new OA\Schema(type: 'integer', example: 10)),
+            new OA\Parameter(name: 'search', in: 'query', description: 'Cari berdasarkan nama pemesan atau kode transaksi', required: false, schema: new OA\Schema(type: 'string', example: 'Budi')),
             new OA\Parameter(name: 'start_date', in: 'query', description: 'Filter dari tanggal (YYYY-MM-DD)', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-01')),
             new OA\Parameter(name: 'end_date', in: 'query', description: 'Filter sampai tanggal (YYYY-MM-DD)', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-31')),
         ],
@@ -217,6 +222,7 @@ class TransactionController extends Controller
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'transaction_code', type: 'string', example: 'TRX-1705234567-123'),
+                                new OA\Property(property: 'order_name', type: 'string', example: 'Budi Santoso', nullable: true),
                                 new OA\Property(property: 'user_id', type: 'integer', example: 1),
                                 new OA\Property(property: 'total_amount', type: 'integer', example: 25000),
                                 new OA\Property(property: 'discount_amount', type: 'integer', example: 5000),
@@ -247,6 +253,14 @@ class TransactionController extends Controller
     {
         $query = Transaction::with('user');
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_name', 'like', "%{$search}%")
+                    ->orWhere('transaction_code', 'like', "%{$search}%");
+            });
+        }
+
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('created_at', [
                 $request->start_date . ' 00:00:00',
@@ -275,6 +289,7 @@ class TransactionController extends Controller
                     properties: [
                         new OA\Property(property: 'id', type: 'integer', example: 1),
                         new OA\Property(property: 'transaction_code', type: 'string', example: 'TRX-1705234567-123'),
+                        new OA\Property(property: 'order_name', type: 'string', example: 'Budi Santoso', nullable: true),
                         new OA\Property(property: 'user_id', type: 'integer', example: 1),
                         new OA\Property(property: 'total_amount', type: 'integer', example: 25000),
                         new OA\Property(property: 'discount_amount', type: 'integer', example: 5000),

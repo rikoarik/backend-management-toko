@@ -14,6 +14,7 @@ class TransactionFactory extends Factory
     {
         return [
             'transaction_code' => 'TRX-' . time() . '-' . mt_rand(100, 999),
+            'order_name' => $this->faker->name(),
             'user_id' => User::factory(),
             'total_amount' => 50000,
             'discount_amount' => 0,
