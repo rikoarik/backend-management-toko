@@ -36,6 +36,8 @@ class DashboardController extends Controller
                                     new OA\Property(property: 'label', type: 'string', example: '1 Jan'),
                                     new OA\Property(property: 'pemasukan', type: 'integer', example: 500000),
                                     new OA\Property(property: 'pengeluaran', type: 'integer', example: 200000),
+                                    new OA\Property(property: 'profit', type: 'integer', example: 300000, description: 'Laba bersih per hari (laba - pengeluaran)'),
+                                    new OA\Property(property: 'laba', type: 'integer', example: 300000, description: 'Laba murni dari penjualan (tanpa dikurangi pengeluaran)'),
                                 ]
                             )
                         ),
@@ -45,7 +47,8 @@ class DashboardController extends Controller
                             properties: [
                                 new OA\Property(property: 'total_pemasukan', type: 'integer', example: 3500000),
                                 new OA\Property(property: 'total_pengeluaran', type: 'integer', example: 1400000),
-                                new OA\Property(property: 'profit', type: 'integer', example: 2100000),
+                                new OA\Property(property: 'profit', type: 'integer', example: 2100000, description: 'Laba bersih (laba - pengeluaran)'),
+                                new OA\Property(property: 'laba', type: 'integer', example: 2100000, description: 'Laba murni dari penjualan (tanpa dikurangi pengeluaran)'),
                             ]
                         ),
                         new OA\Property(property: 'period', type: 'object', properties: [
@@ -123,6 +126,7 @@ class DashboardController extends Controller
                 'pemasukan' => (int) $pemasukan,
                 'pengeluaran' => (int) $pengeluaran,
                 'profit' => (int) ($grossProfit - $pengeluaran), // Net Profit per day
+                'laba' => (int) $grossProfit, // Laba murni dari penjualan (tanpa pengeluaran)
             ];
 
             $currentDate->addDay();
@@ -133,7 +137,8 @@ class DashboardController extends Controller
             'summary' => [
                 'total_pemasukan' => $totalPemasukan,
                 'total_pengeluaran' => $totalPengeluaran,
-                'profit' => $totalGrossProfit - $totalPengeluaran, // Net Profit
+                'profit' => $totalGrossProfit - $totalPengeluaran, // Net Profit (laba - pengeluaran)
+                'laba' => (int) $totalGrossProfit, // Laba murni dari penjualan (tanpa pengeluaran)
             ],
             'period' => [
                 'start_date' => $startDate->format('Y-m-d'),
@@ -159,7 +164,8 @@ class DashboardController extends Controller
                         new OA\Property(property: 'transactions_today', type: 'integer', example: 25),
                         new OA\Property(property: 'income_today', type: 'integer', example: 1500000),
                         new OA\Property(property: 'expense_today', type: 'integer', example: 500000),
-                        new OA\Property(property: 'profit_today', type: 'integer', example: 1000000),
+                        new OA\Property(property: 'profit_today', type: 'integer', example: 1000000, description: 'Laba bersih hari ini (laba - pengeluaran)'),
+                        new OA\Property(property: 'laba_today', type: 'integer', example: 1500000, description: 'Laba murni hari ini dari penjualan (tanpa dikurangi pengeluaran)'),
                         new OA\Property(property: 'low_stock_products', type: 'integer', example: 5, description: 'Jumlah produk dengan stok <= 10'),
                     ]
                 )
@@ -198,6 +204,7 @@ class DashboardController extends Controller
             'income_today' => (int) $incomeToday,
             'expense_today' => (int) $expenseToday,
             'profit_today' => (int) ($grossProfitToday - $expenseToday),
+            'laba_today' => (int) $grossProfitToday, // Laba murni dari penjualan (tanpa pengeluaran)
             'low_stock_products' => $lowStockProducts,
         ]);
     }
