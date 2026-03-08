@@ -353,19 +353,23 @@ class TransactionController extends Controller
         $transaction = Transaction::with('items')->findOrFail($id);
 
         return DB::transaction(function () use ($transaction) {
-            // Restore stock for each item
+            // Restore stock for each item (use lockForUpdate to prevent race conditions)
             foreach ($transaction->items as $item) {
-                $product = Product::find($item->product_id);
+                if (!$item->product_id) {
+                    continue; // product_id null, skip
+                }
+
+                $product = Product::lockForUpdate()->find($item->product_id);
                 if ($product) {
                     $product->stock += $item->quantity;
                     $product->save();
                 }
+                // Jika produk sudah dihapus, stok tidak bisa dikembalikan
+                // (produk sudah tidak ada di sistem)
             }
 
-            // Delete transaction items first
+            // Delete transaction items first, then the transaction
             $transaction->items()->delete();
-
-            // Delete the transaction
             $transaction->delete();
 
             return response()->json([
