@@ -26,6 +26,8 @@ jobs:
 
       - name: Clear Laravel caches before packaging
         run: |
+          mkdir -p database
+          [ -f database/database.sqlite ] || touch database/database.sqlite
           php artisan optimize:clear
           php artisan config:clear
 
