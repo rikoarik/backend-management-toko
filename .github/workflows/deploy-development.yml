@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -71,6 +72,16 @@ jobs:
           fi
           
           echo "✅ Migration completed successfully!"
+
+      - name: Verify deployed app health
+        run: |
+          echo "Checking /up endpoint..."
+          curl --fail --silent --show-error "${{ secrets.DEV_URL }}/up" > /dev/null
+
+          echo "Checking /api/health endpoint..."
+          curl --fail --silent --show-error "${{ secrets.DEV_URL }}/api/health" > /dev/null
+
+          echo "✅ Health checks passed!"
 
       - name: Notify success
         if: success()
