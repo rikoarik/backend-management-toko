@@ -12,7 +12,17 @@ class AuthenticateApiToken
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $bearer = $request->bearerToken();
+        $bearer = $request->bearerToken()
+            ?? $request->header('X-Access-Token')
+            ?? $request->header('x-access-token')
+            ?? $request->header('token')
+            ?? $request->input('access_token')
+            ?? $request->input('token');
+
+        if (is_string($bearer)) {
+            $bearer = trim($bearer, " \t\n\r\0\x0B\"'");
+            $bearer = preg_replace('/^\s*Bearer\s+/i', '', $bearer) ?? '';
+        }
 
         if (!$bearer) {
             return response()->json([
