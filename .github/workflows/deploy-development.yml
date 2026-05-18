@@ -24,6 +24,11 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --optimize-autoloader --no-interaction
 
+      - name: Clear Laravel caches before packaging
+        run: |
+          php artisan optimize:clear
+          php artisan config:clear
+
       - name: Prepare deployment files
         run: |
           # Remove files yang tidak perlu di-deploy
