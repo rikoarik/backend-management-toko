@@ -62,7 +62,8 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            // Force User model so Sanctum token auth remains consistent across environments.
+            'model' => App\Models\User::class,
         ],
 
         // 'users' => [
