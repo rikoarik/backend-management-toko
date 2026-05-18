@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,7 +18,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (Throwable $e, \Illuminate\Http\Request $request) {
+        // Multipart/mobile clients may omit Accept: application/json; still treat /api/* as JSON so
+        // auth failures return 401 instead of redirecting to a non-existent named login route.
+        $exceptions->shouldRenderJsonWhen(
+            function (Request $request, Throwable $e): bool {
+                return $request->is('api/*') || $request->expectsJson();
+            }
+        );
+
+        $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*')) {
                 $statusCode = 500;
                 $response = [
