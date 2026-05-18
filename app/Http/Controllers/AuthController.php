@@ -69,6 +69,7 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Pengguna berhasil didaftarkan',
             'access_token' => $token,
+            'token' => $token, // Backward compatibility for older clients
             'token_type' => 'Bearer',
             'user' => $user
         ], 201);
@@ -133,6 +134,7 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login berhasil',
             'access_token' => $token,
+            'token' => $token, // Backward compatibility for older clients
             'token_type' => 'Bearer',
             'user' => $user
         ]);
