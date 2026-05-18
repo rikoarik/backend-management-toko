@@ -23,22 +23,61 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --optimize-autoloader --no-interaction
 
-      - name: Deploy to Rumahweb Dev via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Prepare deployment files
+        run: |
+          # Remove files yang tidak perlu di-deploy
+          rm -rf .git
+          rm -rf .github
+          rm -rf tests
+          rm -rf node_modules
+          rm -f .env
+          rm -f .env.example
+          rm -f .gitignore
+          rm -f .gitattributes
+          rm -f phpunit.xml
+          rm -f README.md
+
+      - name: Deploy to Development via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            cd ${{ secrets.DEPLOY_PATH_DEV }}
-            git pull origin dev
-            composer install --optimize-autoloader --no-interaction
-            php artisan migrate --force
-            php artisan config:clear
-            php artisan cache:clear
-            php artisan l5-swagger:generate
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER_DEV }}
+          password: ${{ secrets.FTP_PASSWORD_DEV }}
+          server-dir: ${{ secrets.FTP_DIR_DEV }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .env
+            .env.example
+
+      - name: Run Migrations & Clear Cache
+        run: |
+          echo "Running migration on development server..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_SECRET }}" \
+            "${{ secrets.DEV_URL }}/deploy-migrate.php")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "Response: $BODY"
+          echo "HTTP Code: $HTTP_CODE"
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Migration failed!"
+            exit 1
+          fi
+          
+          echo "✅ Migration completed successfully!"
 
       - name: Notify success
         if: success()
         run: echo "✅ Deployment to development successful!"
+
+      - name: Notify failure
+        if: failure()
+        run: echo "❌ Deployment to development failed!"
+
+

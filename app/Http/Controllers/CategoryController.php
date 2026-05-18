@@ -71,7 +71,9 @@ class CategoryController extends Controller
                 description: 'Kategori berhasil dibuat',
                 content: new OA\JsonContent(properties: [
                     new OA\Property(property: 'message', type: 'string', example: 'Category created successfully'),
-                    new OA\Property(property: 'category', type: 'object',
+                    new OA\Property(
+                        property: 'category',
+                        type: 'object',
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 5),
                             new OA\Property(property: 'name', type: 'string', example: 'Makanan Ringan'),
@@ -95,7 +97,7 @@ class CategoryController extends Controller
         $category = Category::create($request->all());
 
         return response()->json([
-            'message' => 'Category created successfully',
+            'message' => 'Kategori berhasil dibuat',
             'category' => $category
         ], 201);
     }
@@ -155,7 +157,9 @@ class CategoryController extends Controller
                 description: 'Kategori berhasil diupdate',
                 content: new OA\JsonContent(properties: [
                     new OA\Property(property: 'message', type: 'string', example: 'Category updated successfully'),
-                    new OA\Property(property: 'category', type: 'object',
+                    new OA\Property(
+                        property: 'category',
+                        type: 'object',
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 1),
                             new OA\Property(property: 'name', type: 'string', example: 'Minuman Segar'),
@@ -180,7 +184,7 @@ class CategoryController extends Controller
         $category->update($request->all());
 
         return response()->json([
-            'message' => 'Category updated successfully',
+            'message' => 'Kategori berhasil diperbarui',
             'category' => $category
         ]);
     }
@@ -210,6 +214,6 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
         $category->delete();
 
-        return response()->json(['message' => 'Category deleted successfully']);
+        return response()->json(['message' => 'Kategori berhasil dihapus']);
     }
 }

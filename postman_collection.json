@@ -1,0 +1,1515 @@
+{
+	"info": {
+		"_postman_id": "management-toko-api-v1",
+		"name": "Management Toko API",
+		"description": "API Documentation untuk Aplikasi Management Toko (POS System)\n\n## Base URL\n- Development: `https://dev-api-toko.diprojectin.com`\n\n## Authentication\nSemua endpoint (kecuali login & register) memerlukan Bearer Token dari Laravel Sanctum.\n\n## Cara Penggunaan\n1. Register atau Login untuk mendapatkan `access_token`\n2. Set token di variable `{{token}}`\n3. Semua request yang memerlukan auth akan menggunakan header `Authorization: Bearer {{token}}`",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://dev-api-toko.diprojectin.com/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Health Check",
+			"description": "Endpoint untuk mengecek status API server",
+			"item": [
+				{
+					"name": "Check Health",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "https://dev-api-toko.diprojectin.com/api/health",
+							"protocol": "https",
+							"host": ["dev-api-toko", "diprojectin", "com"],
+							"path": ["api", "health"]
+						},
+						"description": "Mengecek apakah API server berjalan dengan baik. Endpoint ini tidak memerlukan autentikasi.\n\n**Response (200):**\n- `status`: Status server (ok)\n- `message`: Pesan status\n- `timestamp`: Waktu server saat ini (ISO 8601)\n- `app`: Nama aplikasi"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"description": "Endpoint untuk autentikasi user (Register, Login, Logout, Profile)",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Budi Santoso\",\n    \"username\": \"budi123\",\n    \"email\": \"budi@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Mendaftarkan user baru (Kasir)\n\n**Request Body:**\n- `name` (string, required): Nama lengkap\n- `username` (string, required): Username unik\n- `email` (string, required): Email unik\n- `password` (string, required): Password minimal 8 karakter\n\n**Response (201):**\n- `message`: Pesan sukses\n- `access_token`: Token untuk autentikasi\n- `token_type`: Bearer\n- `user`: Data user yang baru dibuat"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.access_token) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"budi@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login user dengan email/username dan password\n\n**Request Body:**\n- `email` (string, required): Email atau Username\n- `password` (string, required): Password\n\n**Response (200):**\n- `message`: Login successful\n- `access_token`: Token untuk autentikasi (otomatis tersimpan ke variable)\n- `token_type`: Bearer\n- `user`: Data user\n\n**Error (422):** Validation Error jika kredensial salah"
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"budi@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/forgot-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "forgot-password"]
+						},
+						"description": "Step 1: Mengirim OTP ke email user\n\n**Request Body:**\n- `email` (string, required)\n\n**Response (200):**\n- `message`: OTP code has been sent to your email"
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"budi@example.com\",\n    \"otp\": \"123456\",\n    \"password\": \"newpassword123\",\n    \"password_confirmation\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/reset-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "reset-password"]
+						},
+						"description": "Step 2: Reset password menggunakan OTP\n\n**Request Body:**\n- `email` (string, required)\n- `otp` (string, required): 6 digit dari email\n- `password` (string, required)\n- `password_confirmation` (string, required)\n\n**Response (200):**\n- `message`: Password has been reset successfully"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"current_password\": \"oldpassword123\",\n    \"new_password\": \"newpassword123\",\n    \"new_password_confirmation\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/change-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "change-password"]
+						},
+						"description": "Mengganti password user yang sedang login\n\n**Headers:** Authorization: Bearer {token}\n\n**Request Body:**\n- `current_password` (string, required)\n- `new_password` (string, required, min 8 chars)\n- `new_password_confirmation` (string, required)\n\n**Response (200):**\n- `message`: Password changed successfully"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "logout"]
+						},
+						"description": "Logout dan menghapus token yang sedang aktif\n\n**Headers:** Authorization: Bearer {token}\n\n**Response (200):**\n- `message`: Logged out successfully"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["users", "me"]
+						},
+						"description": "Mendapatkan profil user yang sedang login\n\n**Headers:** Authorization: Bearer {token}\n\n**Response (200):**\n- `id`: ID user\n- `name`: Nama user\n- `email`: Email\n- `username`: Username\n- `role`: Role (kasir)\n- `is_active`: Status aktif"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"description": "Endpoint untuk manajemen user",
+			"item": [
+				{
+					"name": "List Users (Paginated)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users?page=1&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Nomor halaman"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Jumlah item per halaman"
+								}
+							]
+						},
+						"description": "Mendapatkan daftar semua user/kasir dengan pagination\n\n**Query Parameters:**\n- `page` (integer, optional): Nomor halaman (default: 1)\n- `size` (integer, optional): Jumlah per halaman (default: 10)\n\n**Response (200):**\n- `data`: Array of users\n- `current_page`: Halaman saat ini\n- `last_page`: Halaman terakhir\n- `per_page`: Item per halaman\n- `total`: Total data"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Detail",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/1",
+							"host": ["{{base_url}}"],
+							"path": ["users", "1"]
+						},
+						"description": "Mendapatkan detail user berdasarkan ID\n\n**Path Parameters:**\n- `id` (integer, required): ID user\n\n**Response (200):** Data lengkap user\n\n**Error (404):** User not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Budi Santoso Update\",\n    \"password\": \"newpassword123\",\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/1",
+							"host": ["{{base_url}}"],
+							"path": ["users", "1"]
+						},
+						"description": "Update data user\n\n**Path Parameters:**\n- `id` (integer, required): ID user\n\n**Request Body (semua opsional):**\n- `name` (string): Nama baru\n- `password` (string): Password baru (min 8 karakter)\n- `is_active` (boolean): Status aktif\n\n**Response (200):**\n- `message`: User updated successfully\n- `user`: Data user yang diupdate"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Categories",
+			"description": "Endpoint untuk manajemen kategori produk",
+			"item": [
+				{
+					"name": "List Categories (Paginated)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/categories?page=1&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["categories"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Nomor halaman"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Jumlah item per halaman"
+								}
+							]
+						},
+						"description": "Mendapatkan daftar kategori produk dengan pagination\n\n**Query Parameters:**\n- `page` (integer, optional): Nomor halaman\n- `size` (integer, optional): Jumlah per halaman (default: 10)\n\n**Response (200):**\n- `data`: Array of categories (id, name, description, timestamps)\n- Pagination info (current_page, last_page, per_page, total)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Makanan Ringan\",\n    \"description\": \"Snack dan camilan untuk cemilan\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories",
+							"host": ["{{base_url}}"],
+							"path": ["categories"]
+						},
+						"description": "Membuat kategori produk baru\n\n**Request Body:**\n- `name` (string, required): Nama kategori (harus unik)\n- `description` (string, optional): Deskripsi kategori\n\n**Response (201):**\n- `message`: Category created successfully\n- `category`: Data kategori yang dibuat\n\n**Error (422):** Validation Error jika nama sudah ada"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category Detail",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/categories/1",
+							"host": ["{{base_url}}"],
+							"path": ["categories", "1"]
+						},
+						"description": "Mendapatkan detail kategori berdasarkan ID\n\n**Path Parameters:**\n- `id` (integer, required): ID kategori\n\n**Response (200):** Data kategori (id, name, description, timestamps)\n\n**Error (404):** Category not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Minuman Segar\",\n    \"description\": \"Aneka minuman segar dan menyehatkan\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories/1",
+							"host": ["{{base_url}}"],
+							"path": ["categories", "1"]
+						},
+						"description": "Update data kategori\n\n**Path Parameters:**\n- `id` (integer, required): ID kategori\n\n**Request Body (semua opsional):**\n- `name` (string): Nama baru (harus unik)\n- `description` (string): Deskripsi baru\n\n**Response (200):**\n- `message`: Category updated successfully\n- `category`: Data kategori yang diupdate"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/categories/1",
+							"host": ["{{base_url}}"],
+							"path": ["categories", "1"]
+						},
+						"description": "Menghapus kategori berdasarkan ID\n\n**Path Parameters:**\n- `id` (integer, required): ID kategori\n\n**Response (200):**\n- `message`: Category deleted successfully\n\n**Error (404):** Category not found"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"description": "Endpoint untuk manajemen produk",
+			"item": [
+				{
+					"name": "List Products (Paginated)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products?page=1&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["products"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Nomor halaman"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Jumlah item per halaman"
+								},
+								{
+									"key": "category_id",
+									"value": "1",
+									"description": "Filter berdasarkan kategori",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "teh",
+									"description": "Cari berdasarkan nama atau barcode",
+									"disabled": true
+								},
+								{
+									"key": "filter",
+									"value": "NEWEST",
+									"description": "Filter sorting: NEWEST (Terbaru), OLDEST (Terlama), STOCK_HIGH (Stok Terbanyak), STOCK_LOW (Stok Tersedikit), NAME_ASC (Nama A-z), NAME_DESC (Nama z-A)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Mendapatkan daftar produk dengan pagination dan filter\n\n**Query Parameters:**\n- `page` (integer, optional): Nomor halaman\n- `size` (integer, optional): Jumlah per halaman (default: 10)\n- `category_id` (integer, optional): Filter berdasarkan kategori\n- `search` (string, optional): Cari berdasarkan nama produk atau barcode\n- `filter` (string, optional): Filter sorting - NEWEST (Terbaru), OLDEST (Terlama), STOCK_HIGH (Stok Terbanyak), STOCK_LOW (Stok Tersedikit), NAME_ASC (Nama A-z), NAME_DESC (Nama z-A). Default: NEWEST\n\n**Response (200):**\n- `data`: Array of products dengan relasi category\n- Pagination info"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Product",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "category_id",
+									"value": "1",
+									"description": "ID kategori (required)",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Aqua 600ml",
+									"description": "Nama produk (required)",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Air mineral kemasan 600ml",
+									"description": "Deskripsi produk (optional)",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "4000",
+									"description": "Harga jual (required)",
+									"type": "text"
+								},
+								{
+									"key": "cost_price",
+									"value": "3500",
+									"description": "Harga modal (optional)",
+									"type": "text"
+								},
+								{
+									"key": "wholesale_price",
+									"value": "3800",
+									"description": "Harga grosir (optional)",
+									"type": "text"
+								},
+								{
+									"key": "retail_price",
+									"value": "4500",
+									"description": "Harga ecer (optional)",
+									"type": "text"
+								},
+								{
+									"key": "stock",
+									"value": "50",
+									"description": "Stok awal (default: 0)",
+									"type": "text"
+								},
+								{
+									"key": "barcode",
+									"value": "8992761100025",
+									"description": "Barcode produk (unique, optional)",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"description": "File gambar produk (max 2MB, jpg/png)",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": ["{{base_url}}"],
+							"path": ["products"]
+						},
+						"description": "Membuat produk baru dengan upload gambar (multipart/form-data)\n\n**Request Body (form-data):**\n- `category_id` (integer, required): ID kategori\n- `name` (string, required): Nama produk\n- `description` (string, optional): Deskripsi\n- `price` (number, required): Harga jual\n- `cost_price` (number, optional): Harga modal\n- `wholesale_price` (number, optional): Harga grosir\n- `retail_price` (number, optional): Harga ecer\n- `stock` (integer, optional): Stok awal (default: 0)\n- `barcode` (string, optional): Barcode unik\n- `image` (file, optional): Gambar produk (max 2MB)\n\n**Response (201):**\n- `message`: Product created successfully\n- `product`: Data produk yang dibuat"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product Detail",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products/1",
+							"host": ["{{base_url}}"],
+							"path": ["products", "1"]
+						},
+						"description": "Mendapatkan detail produk berdasarkan ID termasuk data kategori\n\n**Path Parameters:**\n- `id` (integer, required): ID produk\n\n**Response (200):** Data lengkap produk dengan relasi category\n\n**Error (404):** Product not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "_method",
+									"value": "PUT",
+									"description": "Method spoofing untuk Laravel",
+									"type": "text"
+								},
+								{
+									"key": "category_id",
+									"value": "2",
+									"description": "ID kategori baru",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Teh Botol Sosro 500ml",
+									"description": "Nama produk baru",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Teh botol kemasan besar",
+									"description": "Deskripsi baru",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "6000",
+									"description": "Harga baru",
+									"type": "text"
+								},
+								{
+									"key": "cost_price",
+									"value": "4500",
+									"description": "Harga modal baru",
+									"type": "text"
+								},
+								{
+									"key": "wholesale_price",
+									"value": "5500",
+									"description": "Harga grosir baru",
+									"type": "text"
+								},
+								{
+									"key": "retail_price",
+									"value": "6500",
+									"description": "Harga ecer baru",
+									"type": "text"
+								},
+								{
+									"key": "stock",
+									"value": "150",
+									"description": "Stok baru",
+									"type": "text"
+								},
+								{
+									"key": "barcode",
+									"value": "8992761100099",
+									"description": "Barcode baru",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"description": "Gambar baru (opsional) - gambar lama akan dihapus",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "purchase_price",
+									"value": "500000",
+									"description": "Total harga beli jika restock (opsional, untuk otomatis catat expense)",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "supplier",
+									"value": "Supplier ABC",
+									"description": "Nama supplier (opsional)",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/products/1",
+							"host": ["{{base_url}}"],
+							"path": ["products", "1"]
+						},
+						"description": "Update data produk dengan upload gambar baru. Gunakan POST dengan `_method=PUT` untuk method spoofing (multipart/form-data)\n\n**Path Parameters:**\n- `id` (integer, required): ID produk\n\n**Request Body (form-data, semua opsional):**\n- `_method` (string): Harus diisi \"PUT\"\n- `category_id`, `name`, `description`, `price`, `cost_price`, `stock`, `barcode`, `image`\n- `purchase_price` (integer, opsional): Jika stok bertambah dan field ini diisi, expense akan otomatis tercatat\n- `supplier` (string, opsional): Nama supplier untuk deskripsi expense\n\n**Response (200):**\n- `message`: Product updated successfully\n- `product`: Data produk yang diupdate\n- `expense` (opsional): Data expense jika restock dengan purchase_price"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products/1",
+							"host": ["{{base_url}}"],
+							"path": ["products", "1"]
+						},
+						"description": "Menghapus produk dan gambar terkait\n\n**Path Parameters:**\n- `id` (integer, required): ID produk\n\n**Response (200):**\n- `message`: Product deleted successfully\n\n**Error (404):** Product not found"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Transactions",
+			"description": "Endpoint untuk manajemen transaksi (Checkout)",
+			"item": [
+				{
+					"name": "Create Transaction (Checkout)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"items\": [\n        {\n            \"product_id\": 1,\n            \"quantity\": 2,\n            \"price_type\": \"wholesale\"\n        },\n        {\n            \"product_id\": 3,\n            \"quantity\": 1,\n            \"price_type\": \"retail\"\n        }\n    ],\n    \"discount_amount\": 5000,\n    \"payment_method\": \"cash\",\n    \"notes\": \"Pelanggan minta kantong plastik\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions",
+							"host": ["{{base_url}}"],
+							"path": ["transactions"]
+						},
+						"description": "Membuat transaksi baru (checkout). Stok produk akan otomatis dikurangi.\n\n**Request Body:**\n- `items` (array, required): Daftar produk yang dibeli\n  - `product_id` (integer): ID produk\n  - `quantity` (integer): Jumlah yang dibeli\n  - `price_type` (string, optional): standard | wholesale | retail (Default: standard)\n- `discount_amount` (number, optional): Diskon dalam rupiah (default: 0)\n- `payment_method` (string, required): cash | qris | transfer\n- `notes` (string, optional): Catatan transaksi\n\n**Response (201):**\n- `message`: Transaction created successfully\n- `transaction`: Data transaksi lengkap dengan items\n\n**Error (400):** Jika stok tidak mencukupi\n**Error (422):** Validation Error"
+					},
+					"response": []
+				},
+				{
+					"name": "List Transactions (Paginated)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions?page=1&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["transactions"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Nomor halaman"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Jumlah item per halaman"
+								},
+								{
+									"key": "start_date",
+									"value": "2024-01-01",
+									"description": "Filter dari tanggal (YYYY-MM-DD)",
+									"disabled": true
+								},
+								{
+									"key": "end_date",
+									"value": "2024-01-31",
+									"description": "Filter sampai tanggal (YYYY-MM-DD)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Mendapatkan daftar transaksi dengan pagination dan filter tanggal\n\n**Query Parameters:**\n- `page` (integer, optional): Nomor halaman\n- `size` (integer, optional): Jumlah per halaman (default: 10)\n- `start_date` (string, optional): Filter dari tanggal (YYYY-MM-DD)\n- `end_date` (string, optional): Filter sampai tanggal (YYYY-MM-DD)\n\n**Response (200):**\n- `data`: Array of transactions dengan relasi user\n- Pagination info"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transaction Detail",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions/1",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "1"]
+						},
+						"description": "Mendapatkan detail transaksi beserta daftar item yang dibeli\n\n**Path Parameters:**\n- `id` (integer, required): ID transaksi\n\n**Response (200):**\n- Data lengkap transaksi dengan:\n  - `items`: Array of transaction items\n  - `user`: Data kasir yang membuat transaksi\n\n**Error (404):** Transaction not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Transaction",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions/1",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "1"]
+						},
+						"description": "Menghapus transaksi dan mengembalikan stok produk yang terjual\n\n**Path Parameters:**\n- `id` (integer, required): ID transaksi\n\n**Response (200):**\n- `message`: Transaksi berhasil dihapus\n\n**Error (404):** Transaction not found"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Expenses",
+			"description": "Endpoint untuk manajemen pengeluaran",
+			"item": [
+				{
+					"name": "List Expenses (Paginated)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/expenses?page=1&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["expenses"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Nomor halaman"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Jumlah item per halaman"
+								},
+								{
+									"key": "category",
+									"value": "beli_stok",
+									"description": "Filter kategori: beli_stok, operasional, gaji, lainnya",
+									"disabled": true
+								},
+								{
+									"key": "start_date",
+									"value": "2024-01-01",
+									"description": "Filter dari tanggal (YYYY-MM-DD)",
+									"disabled": true
+								},
+								{
+									"key": "end_date",
+									"value": "2024-01-31",
+									"description": "Filter sampai tanggal (YYYY-MM-DD)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Mendapatkan daftar pengeluaran dengan pagination dan filter\n\n**Query Parameters:**\n- `page` (integer, optional): Nomor halaman\n- `size` (integer, optional): Jumlah per halaman (default: 10)\n- `category` (string, optional): Filter kategori - beli_stok, operasional, gaji, lainnya\n- `start_date` (string, optional): Filter dari tanggal (YYYY-MM-DD)\n- `end_date` (string, optional): Filter sampai tanggal (YYYY-MM-DD)\n\n**Response (200):**\n- `data`: Array of expenses dengan relasi user\n- Pagination info"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Expense",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"category\": \"beli_stok\",\n    \"amount\": 500000,\n    \"description\": \"Beli stok minuman dari supplier\",\n    \"expense_date\": \"2024-01-14\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/expenses",
+							"host": ["{{base_url}}"],
+							"path": ["expenses"]
+						},
+						"description": "Membuat pengeluaran baru\n\n**Request Body:**\n- `category` (string, required): beli_stok | operasional | gaji | lainnya\n- `amount` (integer, required): Jumlah pengeluaran (rupiah)\n- `description` (string, optional): Keterangan\n- `expense_date` (string, required): Tanggal pengeluaran (YYYY-MM-DD)\n\n**Response (201):**\n- `message`: Expense created successfully\n- `expense`: Data pengeluaran"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Expense Detail",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/expenses/1",
+							"host": ["{{base_url}}"],
+							"path": ["expenses", "1"]
+						},
+						"description": "Mendapatkan detail pengeluaran berdasarkan ID\n\n**Path Parameters:**\n- `id` (integer, required): ID pengeluaran\n\n**Response (200):** Data lengkap pengeluaran dengan relasi user\n\n**Error (404):** Expense not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Expense",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"category\": \"operasional\",\n    \"amount\": 600000,\n    \"description\": \"Bayar listrik bulan ini\",\n    \"expense_date\": \"2024-01-15\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/expenses/1",
+							"host": ["{{base_url}}"],
+							"path": ["expenses", "1"]
+						},
+						"description": "Update data pengeluaran\n\n**Path Parameters:**\n- `id` (integer, required): ID pengeluaran\n\n**Request Body (semua opsional):**\n- `category` (string): beli_stok | operasional | gaji | lainnya\n- `amount` (integer): Jumlah pengeluaran\n- `description` (string): Keterangan\n- `expense_date` (string): Tanggal pengeluaran\n\n**Response (200):**\n- `message`: Expense updated successfully\n- `expense`: Data pengeluaran yang diupdate"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Expense",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/expenses/1",
+							"host": ["{{base_url}}"],
+							"path": ["expenses", "1"]
+						},
+						"description": "Menghapus pengeluaran berdasarkan ID\n\n**Path Parameters:**\n- `id` (integer, required): ID pengeluaran\n\n**Response (200):**\n- `message`: Expense deleted successfully\n\n**Error (404):** Expense not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Expense Categories",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/expenses/categories",
+							"host": ["{{base_url}}"],
+							"path": ["expenses", "categories"]
+						},
+						"description": "Mendapatkan daftar kategori pengeluaran yang tersedia\n\n**Response (200):**\n- `categories`: Object berisi daftar kategori (beli_stok, operasional, gaji, lainnya)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dashboard",
+			"description": "Endpoint untuk data dashboard dan chart",
+			"item": [
+				{
+					"name": "Get Chart Data",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/dashboard/chart",
+							"host": ["{{base_url}}"],
+							"path": ["dashboard", "chart"],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2024-01-01",
+									"description": "Tanggal awal (YYYY-MM-DD). Default: 7 hari yang lalu",
+									"disabled": true
+								},
+								{
+									"key": "end_date",
+									"value": "2024-01-07",
+									"description": "Tanggal akhir (YYYY-MM-DD). Default: hari ini",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Mendapatkan data grafik pemasukan dan pengeluaran per hari untuk dashboard. Default: 7 hari terakhir.\n\n**Query Parameters:**\n- `start_date` (string, optional): Tanggal awal (YYYY-MM-DD). Default: 7 hari yang lalu\n- `end_date` (string, optional): Tanggal akhir (YYYY-MM-DD). Default: hari ini\n\n**Response (200):**\n- `chart_data`: Array data per hari\n  - `date`: Tanggal (YYYY-MM-DD)\n  - `label`: Label untuk chart (e.g. \"1 Jan\")\n  - `pemasukan`: Total pemasukan hari itu\n  - `pengeluaran`: Total pengeluaran hari itu\n- `summary`: Ringkasan total\n  - `total_pemasukan`: Total pemasukan periode\n  - `total_pengeluaran`: Total pengeluaran periode\n  - `profit`: Selisih pemasukan - pengeluaran\n- `period`: Info periode yang ditampilkan"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Summary",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/dashboard/summary",
+							"host": ["{{base_url}}"],
+							"path": ["dashboard", "summary"]
+						},
+						"description": "Mendapatkan ringkasan dashboard\n\n**Response (200):**\n- `total_products`: Total semua produk\n- `total_categories`: Total kategori\n- `transactions_today`: Jumlah transaksi hari ini\n- `income_today`: Total pemasukan hari ini\n- `expense_today`: Total pengeluaran hari ini\n- `profit_today`: Profit hari ini (pemasukan - pengeluaran)\n- `low_stock_products`: Jumlah produk dengan stok <= 10"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"description": "Endpoint untuk laporan dan dashboard",
+			"item": [
+				{
+					"name": "Get Dashboard Summary (Legacy)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["reports", "dashboard"]
+						},
+						"description": "Mendapatkan ringkasan dashboard untuk hari ini\n\n**Response (200):**\n- `today_sales` (number): Total penjualan hari ini (dalam Rupiah)\n- `today_transactions` (integer): Jumlah transaksi hari ini\n- `total_products_sold` (integer): Total produk terjual hari ini"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sales Report (Daily)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/sales?type=daily&start_date=2024-01-01&end_date=2024-01-31",
+							"host": ["{{base_url}}"],
+							"path": ["reports", "sales"],
+							"query": [
+								{
+									"key": "type",
+									"value": "daily",
+									"description": "Tipe laporan: daily atau monthly"
+								},
+								{
+									"key": "start_date",
+									"value": "2024-01-01",
+									"description": "Tanggal mulai (wajib untuk type=daily)"
+								},
+								{
+									"key": "end_date",
+									"value": "2024-01-31",
+									"description": "Tanggal akhir (wajib untuk type=daily)"
+								}
+							]
+						},
+						"description": "Mendapatkan laporan penjualan harian\n\n**Query Parameters:**\n- `type` (string, required): \"daily\"\n- `start_date` (string, required): Tanggal mulai (YYYY-MM-DD)\n- `end_date` (string, required): Tanggal akhir (YYYY-MM-DD)\n\n**Response (200):** Array of daily sales data:\n- `date`: Tanggal\n- `total_sales`: Total penjualan\n- `total_transactions`: Jumlah transaksi"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sales Report (Monthly)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/sales?type=monthly&month=2024-01",
+							"host": ["{{base_url}}"],
+							"path": ["reports", "sales"],
+							"query": [
+								{
+									"key": "type",
+									"value": "monthly",
+									"description": "Tipe laporan: monthly"
+								},
+								{
+									"key": "month",
+									"value": "2024-01",
+									"description": "Bulan laporan (YYYY-MM)"
+								}
+							]
+						},
+						"description": "Mendapatkan laporan penjualan bulanan (breakdown harian dalam bulan tersebut)\n\n**Query Parameters:**\n- `type` (string, required): \"monthly\"\n- `month` (string, required): Bulan (YYYY-MM)\n\n**Response (200):** Array of daily sales data dalam bulan tersebut:\n- `date`: Tanggal\n- `total_sales`: Total penjualan\n- `total_transactions`: Jumlah transaksi"
+					},
+					"response": []
+				},
+				{
+					"name": "Export Transactions (Excel)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reports/transactions/export?start_date=2024-01-01&end_date=2024-01-31",
+							"host": ["{{base_url}}"],
+							"path": ["reports", "transactions", "export"],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2024-01-01",
+									"description": "Tanggal mulai (YYYY-MM-DD)"
+								},
+								{
+									"key": "end_date",
+									"value": "2024-01-31",
+									"description": "Tanggal akhir (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Export data transaksi ke Excel (.xlsx) berdasarkan rentang tanggal.\n\n**Query Parameters:**\n- `start_date` (string, required): Tanggal mulai (YYYY-MM-DD)\n- `end_date` (string, required): Tanggal akhir (YYYY-MM-DD)\n\n**Response (200):** File Excel (.xlsx) download\n\n**Di Postman:** Klik dropdown arrow di tombol Send lalu pilih 'Send and Download' supaya file terdownload."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

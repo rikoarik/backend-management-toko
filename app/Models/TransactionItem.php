@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\SerializesDateToLocal;
 
 class TransactionItem extends Model
 {
-    use HasFactory;
+    use HasFactory, SerializesDateToLocal;
 
     protected $fillable = [
         'transaction_id',
@@ -15,7 +16,17 @@ class TransactionItem extends Model
         'product_name',
         'quantity',
         'unit_price',
-        'subtotal'
+        'cost_price',
+        'subtotal',
+        'profit'
+    ];
+
+    protected $casts = [
+        'quantity' => 'integer',
+        'unit_price' => 'integer',
+        'cost_price' => 'integer',
+        'subtotal' => 'integer',
+        'profit' => 'integer',
     ];
 
     public function transaction()

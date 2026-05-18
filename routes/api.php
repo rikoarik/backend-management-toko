@@ -4,12 +4,25 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+// Health Check Endpoint (no auth required)
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'message' => 'API is running',
+        'timestamp' => now()->toISOString(),
+        'app' => config('app.name'),
+    ]);
+});
+
 Route::prefix('v1')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::get('/users/me', [AuthController::class, 'me']); // Alias
 
@@ -18,9 +31,20 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('products', \App\Http\Controllers\ProductController::class);
         Route::apiResource('transactions', \App\Http\Controllers\TransactionController::class);
 
+        // Expenses
+        Route::get('expenses/categories', [\App\Http\Controllers\ExpenseController::class, 'categories']);
+        Route::apiResource('expenses', \App\Http\Controllers\ExpenseController::class);
+
+        // Dashboard
+        Route::prefix('dashboard')->group(function () {
+            Route::get('chart', [\App\Http\Controllers\DashboardController::class, 'chart']);
+            Route::get('summary', [\App\Http\Controllers\DashboardController::class, 'summary']);
+        });
+
         Route::prefix('reports')->group(function () {
             Route::get('dashboard', [\App\Http\Controllers\ReportController::class, 'dashboard']);
             Route::get('sales', [\App\Http\Controllers\ReportController::class, 'sales']);
+            Route::get('transactions/export', [\App\Http\Controllers\ReportController::class, 'exportTransactions']);
         });
     });
 });

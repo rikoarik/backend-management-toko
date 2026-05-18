@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Jakarta',
 
     /*
     |--------------------------------------------------------------------------
@@ -122,5 +122,17 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Deploy Secret
+    |--------------------------------------------------------------------------
+    |
+    | Secret key untuk endpoint deploy/migrate. Harus sama dengan secret
+    | yang disimpan di GitHub Actions secrets.
+    |
+    */
+
+    'deploy_secret' => env('DEPLOY_SECRET'),
 
 ];

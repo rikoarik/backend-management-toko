@@ -10,16 +10,13 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('transactions', function (Blueprint $table) {
+        Schema::create('expenses', function (Blueprint $table) {
             $table->id();
-            $table->string('transaction_code')->unique();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->integer('total_amount');
-            $table->integer('discount_amount')->default(0);
-            $table->integer('final_amount');
-            $table->string('payment_method');
-            $table->string('status')->default('completed');
-            $table->text('notes')->nullable();
+            $table->string('category'); // beli_stok, operasional, gaji, lainnya
+            $table->bigInteger('amount');
+            $table->string('description')->nullable();
+            $table->date('expense_date');
             $table->timestamps();
         });
     }
@@ -29,6 +26,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('transactions');
+        Schema::dropIfExists('expenses');
     }
 };

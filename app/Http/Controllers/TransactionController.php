@@ -31,6 +31,7 @@ class TransactionController extends Controller
                             properties: [
                                 new OA\Property(property: 'product_id', type: 'integer', example: 1, description: 'ID produk'),
                                 new OA\Property(property: 'quantity', type: 'integer', example: 2, description: 'Jumlah yang dibeli'),
+                                new OA\Property(property: 'price_type', type: 'string', enum: ['standard', 'wholesale', 'retail'], example: 'standard', description: 'Tipe harga (opsional, default: standard)'),
                             ]
                         ),
                         example: [
@@ -38,7 +39,8 @@ class TransactionController extends Controller
                             ['product_id' => 3, 'quantity' => 1]
                         ]
                     ),
-                    new OA\Property(property: 'discount_amount', type: 'number', example: 5000, description: 'Diskon dalam rupiah (opsional, default: 0)'),
+                    new OA\Property(property: 'order_name', type: 'string', example: 'Budi Santoso', description: 'Nama pemesan untuk tracking (opsional)'),
+                    new OA\Property(property: 'discount_amount', type: 'integer', example: 5000, description: 'Diskon dalam rupiah (opsional, default: 0)'),
                     new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris', 'transfer'], example: 'cash', description: 'Metode pembayaran (wajib)'),
                     new OA\Property(property: 'notes', type: 'string', example: 'Pelanggan minta kantong plastik', description: 'Catatan transaksi (opsional)'),
                 ]
@@ -50,14 +52,17 @@ class TransactionController extends Controller
                 description: 'Transaksi berhasil dibuat',
                 content: new OA\JsonContent(properties: [
                     new OA\Property(property: 'message', type: 'string', example: 'Transaction created successfully'),
-                    new OA\Property(property: 'transaction', type: 'object',
+                    new OA\Property(
+                        property: 'transaction',
+                        type: 'object',
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 1),
                             new OA\Property(property: 'transaction_code', type: 'string', example: 'TRX-1705234567-123'),
+                            new OA\Property(property: 'order_name', type: 'string', example: 'Budi Santoso', nullable: true),
                             new OA\Property(property: 'user_id', type: 'integer', example: 1),
-                            new OA\Property(property: 'total_amount', type: 'number', example: 25000),
-                            new OA\Property(property: 'discount_amount', type: 'number', example: 5000),
-                            new OA\Property(property: 'final_amount', type: 'number', example: 20000),
+                            new OA\Property(property: 'total_amount', type: 'integer', example: 25000),
+                            new OA\Property(property: 'discount_amount', type: 'integer', example: 5000),
+                            new OA\Property(property: 'final_amount', type: 'integer', example: 20000),
                             new OA\Property(property: 'payment_method', type: 'string', example: 'cash'),
                             new OA\Property(property: 'status', type: 'string', example: 'completed'),
                             new OA\Property(property: 'notes', type: 'string', example: 'Pelanggan minta kantong plastik'),
@@ -68,8 +73,9 @@ class TransactionController extends Controller
                                     new OA\Property(property: 'product_id', type: 'integer', example: 1),
                                     new OA\Property(property: 'product_name', type: 'string', example: 'Teh Botol Sosro'),
                                     new OA\Property(property: 'quantity', type: 'integer', example: 2),
-                                    new OA\Property(property: 'unit_price', type: 'number', example: 5000),
-                                    new OA\Property(property: 'subtotal', type: 'number', example: 10000),
+                                    new OA\Property(property: 'unit_price', type: 'integer', example: 5000),
+                                    new OA\Property(property: 'cost_price', type: 'integer', example: 3500),
+                                    new OA\Property(property: 'subtotal', type: 'integer', example: 10000),
                                 ]
                             )),
                         ]
@@ -92,8 +98,11 @@ class TransactionController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'discount_amount' => 'numeric|min:0',
+            'items.*.price_type' => 'nullable|string|in:standard,wholesale,retail',
+            'order_name' => 'nullable|string|max:255',
+            'discount_amount' => 'integer|min:0',
             'payment_method' => 'required|string',
+            'paid_amount' => 'required|integer|min:0',
             'notes' => 'nullable|string',
         ]);
 
@@ -107,34 +116,70 @@ class TransactionController extends Controller
 
                 if ($product->stock < $item['quantity']) {
                     return response()->json([
-                        'message' => "Stock verification failed for {$product->name}. Requested: {$item['quantity']}, Available: {$product->stock}"
+                        'message' => "Stok tidak mencukupi untuk {$product->name}. Diminta: {$item['quantity']}, Tersedia: {$product->stock}"
+                    ], 400);
+                }
+
+                // Determine price based on type
+                $priceType = $item['price_type'] ?? 'standard';
+                $unitPrice = match ($priceType) {
+                    'wholesale' => $product->wholesale_price ?? $product->price,
+                    'retail' => $product->retail_price ?? $product->price,
+                    default => $product->price,
+                };
+
+                $costPrice = $product->cost_price ?? 0;
+                if ($costPrice > $unitPrice) {
+                    return response()->json([
+                        'message' => 'Harga beli "' . $product->name . '" melebihi harga jual.',
                     ], 400);
                 }
 
                 $product->stock -= $item['quantity'];
                 $product->save();
 
-                $subtotal = $product->price * $item['quantity'];
+                $subtotal = $unitPrice * $item['quantity'];
                 $totalAmount += $subtotal;
+
+                // Calculate profit for this item
+                $itemProfit = ($unitPrice - $costPrice) * $item['quantity'];
 
                 $transactionItems[] = [
                     'product_id' => $product->id,
                     'product_name' => $product->name,
                     'quantity' => $item['quantity'],
-                    'unit_price' => $product->price,
+                    'unit_price' => $unitPrice,
+                    'cost_price' => $costPrice,
                     'subtotal' => $subtotal,
+                    'profit' => $itemProfit,
                 ];
             }
 
             // 2. Create Transaction Header
             $finalAmount = $totalAmount - ($request->discount_amount ?? 0);
-            
+            $finalAmount = max(0, $finalAmount);
+
+            if ($request->paid_amount < $finalAmount) {
+                return response()->json([
+                    'message' => 'Uang yang dibayarkan kurang. Total: ' . $finalAmount . ', Dibayar: ' . $request->paid_amount
+                ], 400);
+            }
+
+            $changeAmount = $request->paid_amount - $finalAmount;
+
+            // Calculate total profit
+            $totalProfit = collect($transactionItems)->sum('profit');
+
             $transaction = Transaction::create([
                 'transaction_code' => 'TRX-' . time() . '-' . mt_rand(100, 999),
+                'order_name' => $request->order_name,
                 'user_id' => auth()->id(),
                 'total_amount' => $totalAmount,
                 'discount_amount' => $request->discount_amount ?? 0,
-                'final_amount' => max(0, $finalAmount),
+                'final_amount' => $finalAmount,
+                'paid_amount' => $request->paid_amount,
+                'change_amount' => $changeAmount,
+                'total_profit' => $totalProfit,
                 'payment_method' => $request->payment_method,
                 'status' => 'completed',
                 'notes' => $request->notes,
@@ -148,7 +193,7 @@ class TransactionController extends Controller
             $transaction->load('items');
 
             return response()->json([
-                'message' => 'Transaction created successfully',
+                'message' => 'Transaksi berhasil dibuat',
                 'transaction' => $transaction
             ], 201);
         });
@@ -163,6 +208,7 @@ class TransactionController extends Controller
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', description: 'Nomor halaman', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'size', in: 'query', description: 'Jumlah item per halaman', required: false, schema: new OA\Schema(type: 'integer', example: 10)),
+            new OA\Parameter(name: 'search', in: 'query', description: 'Cari berdasarkan nama pemesan atau kode transaksi', required: false, schema: new OA\Schema(type: 'string', example: 'Budi')),
             new OA\Parameter(name: 'start_date', in: 'query', description: 'Filter dari tanggal (YYYY-MM-DD)', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-01')),
             new OA\Parameter(name: 'end_date', in: 'query', description: 'Filter sampai tanggal (YYYY-MM-DD)', required: false, schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-31')),
         ],
@@ -176,14 +222,17 @@ class TransactionController extends Controller
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'transaction_code', type: 'string', example: 'TRX-1705234567-123'),
+                                new OA\Property(property: 'order_name', type: 'string', example: 'Budi Santoso', nullable: true),
                                 new OA\Property(property: 'user_id', type: 'integer', example: 1),
-                                new OA\Property(property: 'total_amount', type: 'number', example: 25000),
-                                new OA\Property(property: 'discount_amount', type: 'number', example: 5000),
-                                new OA\Property(property: 'final_amount', type: 'number', example: 20000),
+                                new OA\Property(property: 'total_amount', type: 'integer', example: 25000),
+                                new OA\Property(property: 'discount_amount', type: 'integer', example: 5000),
+                                new OA\Property(property: 'final_amount', type: 'integer', example: 20000),
                                 new OA\Property(property: 'payment_method', type: 'string', example: 'cash'),
                                 new OA\Property(property: 'status', type: 'string', example: 'completed'),
                                 new OA\Property(property: 'created_at', type: 'string', example: '2024-01-14T10:00:00.000000Z'),
-                                new OA\Property(property: 'user', type: 'object',
+                                new OA\Property(
+                                    property: 'user',
+                                    type: 'object',
                                     properties: [
                                         new OA\Property(property: 'id', type: 'integer', example: 1),
                                         new OA\Property(property: 'name', type: 'string', example: 'Budi Santoso'),
@@ -204,9 +253,17 @@ class TransactionController extends Controller
     {
         $query = Transaction::with('user');
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_name', 'like', "%{$search}%")
+                    ->orWhere('transaction_code', 'like', "%{$search}%");
+            });
+        }
+
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('created_at', [
-                $request->start_date . ' 00:00:00', 
+                $request->start_date . ' 00:00:00',
                 $request->end_date . ' 23:59:59'
             ]);
         }
@@ -232,10 +289,11 @@ class TransactionController extends Controller
                     properties: [
                         new OA\Property(property: 'id', type: 'integer', example: 1),
                         new OA\Property(property: 'transaction_code', type: 'string', example: 'TRX-1705234567-123'),
+                        new OA\Property(property: 'order_name', type: 'string', example: 'Budi Santoso', nullable: true),
                         new OA\Property(property: 'user_id', type: 'integer', example: 1),
-                        new OA\Property(property: 'total_amount', type: 'number', example: 25000),
-                        new OA\Property(property: 'discount_amount', type: 'number', example: 5000),
-                        new OA\Property(property: 'final_amount', type: 'number', example: 20000),
+                        new OA\Property(property: 'total_amount', type: 'integer', example: 25000),
+                        new OA\Property(property: 'discount_amount', type: 'integer', example: 5000),
+                        new OA\Property(property: 'final_amount', type: 'integer', example: 20000),
                         new OA\Property(property: 'payment_method', type: 'string', example: 'cash'),
                         new OA\Property(property: 'status', type: 'string', example: 'completed'),
                         new OA\Property(property: 'notes', type: 'string', example: 'Pelanggan minta kantong plastik'),
@@ -246,11 +304,13 @@ class TransactionController extends Controller
                                 new OA\Property(property: 'product_id', type: 'integer', example: 1),
                                 new OA\Property(property: 'product_name', type: 'string', example: 'Teh Botol Sosro'),
                                 new OA\Property(property: 'quantity', type: 'integer', example: 2),
-                                new OA\Property(property: 'unit_price', type: 'number', example: 5000),
-                                new OA\Property(property: 'subtotal', type: 'number', example: 10000),
+                                new OA\Property(property: 'unit_price', type: 'integer', example: 5000),
+                                new OA\Property(property: 'subtotal', type: 'integer', example: 10000),
                             ]
                         )),
-                        new OA\Property(property: 'user', type: 'object',
+                        new OA\Property(
+                            property: 'user',
+                            type: 'object',
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'name', type: 'string', example: 'Budi Santoso'),
@@ -267,4 +327,40 @@ class TransactionController extends Controller
     {
         return response()->json(Transaction::with(['items', 'user'])->findOrFail($id));
     }
+
+    #[OA\Delete(
+        path: '/api/v1/transactions/{id}',
+        summary: 'Delete transaction',
+        description: 'Menghapus transaksi dari riwayat. Stok produk tidak dikembalikan.',
+        security: [['sanctum' => []]],
+        tags: ['Transactions'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', description: 'ID transaksi', required: true, schema: new OA\Schema(type: 'integer', example: 1))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Transaksi berhasil dihapus',
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: 'message', type: 'string', example: 'Transaksi berhasil dihapus'),
+                ])
+            ),
+            new OA\Response(response: 404, description: 'Transaction not found')
+        ]
+    )]
+    public function destroy($id)
+    {
+        $transaction = Transaction::findOrFail($id);
+
+        return DB::transaction(function () use ($transaction) {
+            $transaction->items()->delete();
+            $transaction->delete();
+
+            return response()->json([
+                'message' => 'Transaksi berhasil dihapus'
+            ]);
+        });
+    }
+
+
 }
